@@ -27,7 +27,7 @@ Step 4 is the study. The difference between those two screens is the entire inte
 ## Why the silent phase shows less
 
 The baseline must record behaviour without changing it. A checklist, an AWaRe badge or a
-suggested counselling script displayed during baseline *is itself an intervention* — it
+suggested counselling script displayed during baseline *is itself an intervention*, it
 contaminates the very measurement it is supposed to establish.
 
 So in the silent phase the tool records and displays nothing: no AWaRe group, no prompts, no
