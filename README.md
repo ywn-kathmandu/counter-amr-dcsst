@@ -11,7 +11,7 @@ cluster implementation study of antibiotic stewardship at the pharmacy counter
 > **Research prototype.** Sample data throughout. Not a commercial product, not for clinical
 > use, and the clinical prompt wording and red-flag rules are drafts awaiting panel sign-off.
 
-**▶ Live demo:** *(set once GitHub Pages is enabled — Settings → Pages → Deploy from branch `main`, folder `/`)*
+**▶ Live demo:** https://github.com/ywn-kathmandu/counter-amr-dcsst/
 
 ---
 
