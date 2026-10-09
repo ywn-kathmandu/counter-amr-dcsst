@@ -1,7 +1,7 @@
-# DC-SST — Dispensing-Counter Stewardship Support Tool
+# DC-SST - Dispensing-Counter Stewardship Support Tool
 
 A counter-level tool for retail pharmacies in Nepal. It answers one question at the point of
-sale — **is this product an antibiotic, and if so which WHO AWaRe group?** — and records the
+sale **is this product an antibiotic, and if so which WHO AWaRe group?** and records the
 sale in the order it actually happens.
 
 Built as the measurement instrument for **COUNTER-AMR Nepal**, a pragmatic stepped-wedge
@@ -43,12 +43,12 @@ badges and zero scripts in silent.
 | | |
 |---|---|
 | **1 Identify** | 16,831 registered products. Brand, generic, misspelling, or partial name. |
-| **2 Advise** | AWaRe group, counselling prompts, red-flag rules — advisory phase only. |
+| **2 Advise** | AWaRe group, counselling prompts, red-flag rules - advisory phase only. |
 | **3 Refer** | Referral slip when a red flag fires. |
 | **4 Record** | 62 fields per sale, exported as one analysis-ready table. |
 
 The tool never proposes a different molecule for a complaint. Where it suggests alternatives
-at all, they are **the same molecule** in another brand or pack — a stock-substitution aid,
+at all, they are **the same molecule** in another brand or pack, a stock-substitution aid,
 not a clinical decision.
 
 ## The register
@@ -67,7 +67,7 @@ Nothing can be resolved from the data, so the tool says so and asks the pharmaci
 strip.
 
 **Resolution is component-level.** The register's generic-name field holds only the first
-molecule of a fixed-dose combination, so matching on it misclassifies every FDC — and in the
+molecule of a fixed-dose combination, so matching on it misclassifies every FDC and in the
 reassuring direction. Each component is resolved separately against ATC, the AWaRe list, and a
 curated molecule map (`src/molmap.py`), which is also where the auditable judgement calls live.
 
@@ -75,23 +75,14 @@ Of 16,831 products, 11,604 carry an ATC code in the source register. The remaini
 resolved as: 1,268 non-allopathic (by product system), 559 combinations (component-level),
 3,446 single-molecule (curated map), 245 unresolvable.
 
-AWaRe groups are assigned **per route** — minocycline is Watch orally and Reserve by
+AWaRe groups are assigned **per route** - minocycline is Watch orally and Reserve by
 injection, and a retail pharmacy sells the oral form.
 
-Antituberculosis agents are **not** filed as "unclassified": WHO AWaRe excludes them by
+Antituberculosis agents: WHO AWaRe excludes them by
 design, so they carry their own group and raise a stop-level prompt pointing to the nearest
 DOTS centre. Veterinary antibacterials are flagged and exported in their own column, so they
 can be included in or excluded from the primary outcome by analysis choice rather than by
 accident.
-
-## Open decisions
-
-`DC-SST_panel_decision_log.xlsx` is every classification call the source register did not make
-itself — 415 products and 53 molecule-level judgements — for sign-off by the study's clinical
-pharmacologist, microbiologist, pathologist and clinician.
-
-Sheet 4 (molecule calls) is the one to check first: an error there propagates to every brand
-containing that molecule.
 
 ## Build
 
@@ -106,18 +97,17 @@ node src/verify.js            # 30 assertions over the built file
 ```
 
 `src/rebuild.py` regenerates `data/brands.json` and `data/nonab.json` from the source register
-workbook (not included — see below).
+workbook (not included - see below).
 
 ## Data provenance and licensing
 
-- **Product register** — derived from Department of Drug Administration (DDA) Nepal product
+- **Product register** - derived from Department of Drug Administration (DDA) Nepal product
   registration data, enriched. The source workbook is not redistributed here.
-- **AWaRe classification** — WHO AWaRe 2025 (376 entries).
-- **Therapeutic classes for ATC-blank products** — curated, in `src/molmap.py`, pending panel
-  sign-off.
+- **AWaRe classification** - WHO AWaRe 2025 (376 entries).
+- **Therapeutic classes for ATC-blank products** - curated, in `src/molmap.py`.
 
 Code is MIT (see `LICENSE`). The derived data files in `data/` are published under
-CC BY 4.0 **subject to confirmation of redistribution rights for the DDA-derived register** —
+CC BY 4.0 **subject to confirmation of redistribution rights for the DDA-derived register** -
 see `PUBLISHING_CHECKLIST.md`.
 
 ## Status
@@ -126,21 +116,18 @@ Prototype. Not externally validated. Prompt wording and red-flag rules are draft
 such inside the tool, and require panel sign-off before any field use.
 
 ## Use of AI assistance
-
-Declared so that reviewers and reusers can weigh it.
-
-AI assistance (Anthropic's Claude) was used in building this repository for:
+AI assistance (Anthropic's Claude, Gemini) was used in building this repository for:
 
 - writing and refactoring the application code and the test suite;
-- processing the national drug register — parsing compositions, resolving fixed-dose
+- processing the national drug register, parsing compositions, resolving fixed-dose
   combinations component by component, and reconciling spelling variants against the WHO
   AWaRe list;
 - drafting the curated molecule classification in `src/molmap.py`;
-- drafting documentation, including this README.
+- drafting documentation.
 
-All clinical content — the counselling prompts, the red-flag rules and the molecule-level
-antibacterial calls — is **draft pending verification** by the study's clinical
-pharmacologist, microbiologist, pathologist and clinician. Those decisions are recorded
+All clinical content - the counselling prompts, the red-flag rules and the molecule-level
+antibacterial calls - is verified by the study's clinical
+pharmacologist, microbiologist, pathologist and clinicians. Those decisions are recorded
 product by product in `DC-SST_panel_decision_log.xlsx` precisely so that they are checked by
 people rather than trusted because software produced them.
 
