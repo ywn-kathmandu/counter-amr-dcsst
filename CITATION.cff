@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: "DC-SST — Dispensing-Counter Stewardship Support Tool"
+message: "If you use this software, please cite it as below."
+type: software
+abstract: >-
+  A counter-level tool for retail pharmacies in Nepal that identifies whether a
+  dispensed product is an antibiotic, assigns its WHO AWaRe group, and records the
+  sale as the measurement instrument for a stepped-wedge implementation study of
+  antibiotic stewardship at the pharmacy counter.
+authors:
+  - family-names: "<<< FILL IN — see PUBLISHING_CHECKLIST.md >>>"
+    given-names: "<<< FILL IN >>>"
+license: MIT
+version: 0.9.4-prototype
+date-released: "2026-10-08"
+keywords:
+  - antimicrobial resistance
+  - antibiotic stewardship
+  - WHO AWaRe
+  - retail pharmacy
+  - implementation research
+  - Nepal
