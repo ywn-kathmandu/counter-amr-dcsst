@@ -1,0 +1,1614 @@
+<title>COUNTER-AMR DC-SST</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
+<style>
+/* Layout: phone-first app shell — sticky header, scrolling stage, bottom tab bar; widens to a 2-col reading grid past 900px. */
+:root{
+  --bg:#ffffff; --surface:#ffffff; --surface-2:#f5f6f8; --line:#d5d9e0; --line-soft:#e8eaef;
+  --fg:#15181f; --fg-2:#474d5c; --fg-3:#5f6575;
+  --accent:#1f47b8; --accent-soft:#eaefff; --accent-fg:#ffffff; --onbar:#ffffff;
+  --access:#17683f; --access-bg:#e2f3e9;
+  --watch:#8a5405; --watch-bg:#fdf0d8;
+  --reserve:#a01338; --reserve-bg:#fce0e7;
+  --notrec:#5f3f86; --notrec-bg:#efe6f8;
+  --danger:#a8231c; --danger-bg:#fce3e1;
+  --font-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --font-cond:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --r:10px; --shadow:none;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* shell */
+#shell{display:flex;flex-direction:column;height:100%;max-width:1180px;margin:0 auto;background:var(--bg)}
+header#top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);border-bottom:1px solid var(--line);padding:9px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brandmark{display:flex;align-items:baseline;gap:7px;min-width:0}
+.brandmark b{font-family:var(--font-cond);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px}
+.brandmark span{font-family:var(--font-mono);font-size:11.5px;color:var(--fg-3)}
+.spacer{flex:1 1 auto}
+.phasepill{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-cond);font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:4px 9px;border-radius:999px;border:1px solid var(--line)}
+.phasepill.silent{background:var(--surface-2);color:var(--fg-2)}
+.phasepill.advisory{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+main{flex:1 1 auto;overflow-y:auto;padding:16px 16px 26px;-webkit-overflow-scrolling:touch}
+nav#tabs{position:sticky;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding:0 0 env(safe-area-inset-bottom,0px)}
+nav#tabs button{padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--fg-3);font-family:var(--font-cond);font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;border-top:2px solid transparent;margin-top:-1px}
+nav#tabs button[aria-selected="true"]{color:var(--accent);border-top-color:var(--accent)}
+nav#tabs svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7}
+
+/* primitives */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:15px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.stack-s{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.eyebrow{font-family:var(--font-cond);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3)}
+h1,h2,h3{text-wrap:balance;margin:0}
+h1{font-size:19px;font-weight:600;letter-spacing:-.01em}
+h2{font-size:15.5px;font-weight:600}
+h3{font-size:13.5px;font-weight:600}
+.muted{color:var(--fg-2);font-size:13.5px}
+.tiny{color:var(--fg-3);font-size:12px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 16px;border-radius:9px;background:var(--surface);color:var(--fg);font-weight:500;font-size:14.5px;border:1px solid var(--line)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:transparent;font-weight:600}
+.btn.wide{width:100%}
+.btn.sm{padding:7px 11px;font-size:12.5px;border-radius:7px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.seg{display:flex;gap:6px}
+.seg button{flex:1 1 0;min-width:0;padding:12px 8px;border-radius:9px;border:1.5px solid var(--line);background:var(--surface);font-weight:500;font-size:14px;text-align:center}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:8px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-size:13.5px}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;font-family:var(--font-cond);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.b-Access{background:var(--access-bg);color:var(--access)}
+.b-Watch{background:var(--watch-bg);color:var(--watch)}
+.b-Reserve{background:var(--reserve-bg);color:var(--reserve)}
+.b-Notrecommended{background:var(--notrec-bg);color:var(--notrec)}
+.b-Unverified{background:var(--accent-soft);color:var(--accent)}
+.b-Needspaneldecision{background:var(--surface-2);color:var(--fg-2);border:1px solid var(--line)}
+.b-Unclassified{background:var(--surface-2);color:var(--fg-2);border:1px solid var(--line)}
+.b-Antituberculosis{background:var(--notrec-bg);color:var(--notrec)}
+.b-Unknown{background:var(--surface-2);color:var(--fg-2)}
+.b-vet{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+#protobar{flex:none;padding:5px 14px;background:var(--watch-bg);color:var(--watch);
+  font-family:var(--font-cond);font-size:11.5px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;text-align:center;border-bottom:1px solid var(--line)}
+.orient{border:1.5px solid var(--accent);background:var(--accent-soft);border-radius:11px;padding:13px 15px}
+.orient h3{margin:0 0 7px}
+.orient ol{margin:0;padding-left:19px}
+.orient li{margin:4px 0;font-size:13.5px;line-height:1.5}
+label.check{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;background:var(--surface);cursor:pointer}
+label.check input{margin:2px 0 0;width:18px;height:18px;flex:none;accent-color:var(--accent)}
+label.check.on{border-color:var(--accent);background:var(--accent-soft)}
+input[type=text],input[type=number],input[type=search],select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:9px;background:var(--surface)}
+input[type=search]{font-size:16px}
+hr.sep{border:none;border-top:1px solid var(--line-soft);margin:2px 0}
+
+/* search */
+.searchwrap{position:relative}
+.results{margin-top:8px;display:flex;flex-direction:column;gap:1px;background:var(--line-soft);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.results button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 13px;background:var(--surface)}
+.results button:hover,.results button:focus-visible{background:var(--surface-2)}
+.rname{font-weight:600;font-size:14.5px}
+.rgen{font-size:13px;color:var(--fg-2)}
+
+/* prompt card */
+.prompt{border-radius:var(--r);padding:14px;border:1.5px solid}
+.prompt.info{background:var(--accent-soft);border-color:var(--accent)}
+.prompt.warn{background:var(--watch-bg);border-color:var(--watch)}
+.prompt.stop{background:var(--danger-bg);border-color:var(--danger)}
+.prompt h3{font-size:15px;margin-bottom:5px}
+.prompt ul{margin:7px 0 0;padding-left:18px;font-size:13.5px}
+.prompt li{margin:3px 0}
+
+/* stats + charts */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px}
+.tile .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:23px;font-weight:600;line-height:1.15;letter-spacing:-.02em}
+.tile .l{font-family:var(--font-cond);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-3);margin-top:3px}
+.tile .s{font-size:12.5px;color:var(--fg-2);margin-top:5px}
+.stackbar{display:flex;height:30px;border-radius:7px;overflow:hidden;border:1px solid var(--line-soft)}
+.stackbar div{display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11.5px;font-weight:600;color:var(--onbar);min-width:0;overflow:hidden}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--fg-2)}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-family:var(--font-cond);font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--fg-3);padding:7px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+td.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.tablewrap{overflow-x:auto}
+.meter{height:7px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:99px}
+
+/* misc */
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+.note{border-left:3px solid var(--accent);background:var(--surface-2);padding:10px 13px;border-radius:0 8px 8px 0;font-size:13px;color:var(--fg-2)}
+.note.warn{border-left-color:var(--watch)}
+details.acc{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+details.acc summary{cursor:pointer;font-weight:600;font-size:14px;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px}
+details.acc summary::-webkit-details-marker{display:none}
+details.acc summary::after{content:"+";font-family:var(--font-mono);color:var(--fg-3);font-size:17px;flex:none}
+details.acc[open] summary::after{content:"–"}
+details.acc .body{margin-top:10px;font-size:13px;color:var(--fg-2)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12.5px}
+.kv dt{color:var(--fg-3);font-family:var(--font-cond);letter-spacing:.04em;text-transform:uppercase;font-size:12px;padding-top:1px}
+.kv dd{margin:0;font-family:var(--font-mono);font-size:12.5px;overflow-wrap:anywhere}
+.script{display:inline-block;font-size:13.5px;color:var(--accent);background:var(--accent-soft);padding:3px 8px;border-radius:6px;margin-top:4px}
+.pathtag{font-family:var(--font-cond);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:5px;background:var(--surface-2);color:var(--fg-2)}
+.ok{color:var(--access)} .no{color:var(--danger)} .na{color:var(--fg-3)}
+@media(min-width:900px){
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+  .cols>*{min-width:0}
+}
+</style>
+
+<div id="shell">
+  <header id="top">
+    <div class="brandmark"><b>DC&#8209;SST</b><span id="phId">PH&#8209;00</span></div>
+    <div class="spacer"></div>
+    <button id="phaseBtn" class="phasepill silent"><i class="dot"></i><span id="phaseTxt">Silent</span></button>
+  </header>
+  <div id="protobar">Research prototype &middot; TDR&nbsp;CA26-0034 &middot; sample data &middot; not for clinical use</div>
+  <main id="stage"></main>
+  <nav id="tabs" role="tablist"></nav>
+</div>
+
+<script>
+/* ============================================================
+   COUNTER-AMR Nepal — DC-SST prototype
+   Functions: 1 Identify · 2 Advise · 3 Refer · 4 Record
+   Prototype for TDR CA26-0034. Not for clinical use.
+   ============================================================ */
+/* BUILD is replaced at build time. 'demo' is the public evaluator build: it seeds
+   example traffic and lets the phase be switched so a reviewer can see both states.
+   'field' is what goes to a pharmacy: no seeded data, and the phase is fixed by the
+   cluster's activation date rather than by anyone at the counter. */
+const BUILD = /*BUILD_MODE*/'demo';
+const FIELD = BUILD === 'field';
+const AWARE = /*AWARE_DATA*/[];
+const BRANDS = /*BRAND_DATA*/[];
+const NONAB = /*NONAB_DATA*/[];   // every other registered product, so 'is this an antibiotic?' has a real answer
+
+const VERSIONS = {
+  app:'0.10.0-prototype',
+  map:'NP-DDA v1 enriched · 16,831 products · 2,869 antibiotic',
+  aware:'WHO AWaRe 2025 — 376 entries',
+  prompts:'PL-2026.10 rev 5 — draft, panel sign-off pending',
+  engine:'scoring-engine 2.0 · three-state components, unassessed never counted as concordant'
+};
+
+/* ---- prompt library: every string versioned + logged by id ---- */
+const PROMPTS = {
+  'P-A1':{t:'Access antibiotic',b:['First-line group. Dispense the full course as prescribed.','Confirm the customer knows the total number of days.']},
+  'P-W1':{t:'Watch antibiotic',b:['Higher resistance potential — conserve where an Access option is appropriate.','If a clinician prescribed this, dispense it. Do not substitute on AWaRe group alone.']},
+  'P-R1':{t:'Reserve antibiotic',b:['Last-resort group, intended for hospital use.','Refer to a clinician or hospital pharmacy before dispensing.']},
+  'P-N1':{t:'Not-recommended combination',b:['This fixed-dose combination is not recommended by WHO.','A single-molecule alternative is usually available — refer to a clinician.']},
+  'P-NP1':{t:'No prescription presented',b:['Record the reason for the request and screen for red flags before dispensing.','Antibiotics normally require a prescription.']},
+  'P-RF1':{t:'Red flag present — refer',b:['This presentation needs a clinician, not an antibiotic from the counter.','Offer the referral slip and note where the customer can be seen today.']},
+  'P-SH1':{t:'Short course',b:['The quantity entered is below a usual treatment course.','Partial courses drive resistance. Offer the full course or refer.']},
+  'P-CH1':{t:'Child under 2',b:['Screen carefully and refer rather than dispense on request.','Dosing in this age group is weight-based.']},
+  'P-FQ1':{t:'Fluoroquinolone caution',b:['Avoid in under-18s and in pregnancy unless a clinician has prescribed it.','Ask about tendon problems and prior reactions.']},
+  'P-PG1':{t:'Pregnancy',b:['Several antibiotic classes are unsuitable in pregnancy.','Refer to a clinician before dispensing.']},
+  'P-UV1':{t:'Product not yet in the register',b:['This product was added at the counter and has not been checked by the research team.','Read the strip carefully and treat it as higher risk until it is confirmed.']},
+  'P-U1':{t:'Not classified by AWaRe',b:['This product is a combination the WHO classification does not cover.','Treat as higher risk until the review panel rules on it, and prefer a single-molecule alternative.']},
+  'P-TB1':{t:'Antituberculosis drug',b:['TB treatment is supervised through the national programme, not dispensed course by course over the counter.','Single-drug or part-course TB treatment is how resistant TB develops.','Refer the person to the nearest DOTS centre.']},
+  'P-VT1':{t:'Veterinary antibiotic',b:['This product is registered for animal use.','If it is being bought for a person, refer them to a prescriber instead.','Record the sale either way so the study can count it.']},
+  'P-CO1':{t:'Counselling',b:['Complete the full course even after symptoms improve.','Return if no better in 48–72 hours, or sooner if worse.']}
+};
+
+/* ---- indication chips + red-flag screen (panel-reviewed placeholders) ---- */
+const INDICATIONS = [
+  {id:'resp',   l:'Cough / cold',      np:'Rugha, khoki'},
+  {id:'fever',  l:'Fever',             np:'Jworo'},
+  {id:'throat', l:'Sore throat',       np:'Ghaanti dukheko'},
+  {id:'diarr',  l:'Loose motion',      np:'Disa laageko'},
+  {id:'stomach',l:'Stomach pain',      np:'Pet dukheko'},
+  {id:'urine',  l:'Urine problem',     np:'Pisab poleko'},
+  {id:'skin',   l:'Skin / wound',      np:'Ghau, chala'},
+  {id:'dental', l:'Toothache',         np:'Daat dukheko'},
+  {id:'eyeear', l:'Eye / ear',         np:'Aankha, kaan'},
+  {id:'repeat', l:'Same as last time', np:'Aghi kai aushadhi'},
+  {id:'other',  l:'Something else',    np:''}
+];
+const REDFLAGS = [
+  {id:'rf1',l:'Fever more than 3 days, or fever with rash'},
+  {id:'rf2',l:'Breathlessness, chest pain, or very fast breathing'},
+  {id:'rf3',l:'Blood in stool or vomit, or signs of dehydration'},
+  {id:'rf4',l:'Difficulty swallowing, drooling, or neck swelling'},
+  {id:'rf5',l:'Not improving after a previous antibiotic course'},
+  {id:'rf6',l:'Pregnant, or a child under 2 years'},
+  {id:'rf7',l:'Diabetes with a foot wound, or a spreading wound'}
+];
+const AGEBANDS=['<2','2–11','12–17','18–44','45–64','65+'];
+const SEXES=['Female','Male','Not stated'];
+
+/* ---- state ---- */
+const DEF_CFG={pharmacyId:'PH-07',cluster:'C3',step:2,phase:'silent',activated:'',seeded:false,staffCode:'S-02',studyStart:'',stock:[]};
+let cfg={...DEF_CFG}, tx=[], adverse=[], unresolved=[], provisional=[], searches=[];
+let tab='counter', lastView='';
+let draft=null, t0=0, lookupMs=0;
+
+const LS='dcsst.v1';
+function save(){ try{ localStorage.setItem(LS,JSON.stringify({cfg,tx,adverse,unresolved,provisional,searches:searches.slice(-800)})); }
+  catch(e){ try{ localStorage.setItem(LS,JSON.stringify({cfg,tx,adverse,unresolved,
+    provisional:provisional.map(x=>({...x,photo:null}))})); toast('Storage full — photos dropped'); }catch(e2){} } }
+function load(){ try{ const r=localStorage.getItem(LS); if(!r) return false;
+  const d=JSON.parse(r); cfg={...DEF_CFG,...(d.cfg||{})}; tx=d.tx||[]; adverse=d.adverse||[]; unresolved=d.unresolved||[]; provisional=d.provisional||[]; searches=d.searches||[]; return true;
+}catch(e){ return false } }
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const groupKey=g=>'b-'+String(g||'Unknown').replace(/[^A-Za-z]/g,'');
+const groupLabel=g=>g==='Needs panel decision'?'Panel review':(g==='Antituberculosis'?'TB drug':g);
+const pct=(n,d)=>d? Math.round(n/d*100):0;
+function toast(msg){ const el=document.createElement('div'); el.className='toast'; el.textContent=msg; document.body.appendChild(el);
+  setTimeout(()=>el.remove(),2300); }
+
+/* ---- FUNCTION 1 — Identify: brand → generic → AWaRe ---- */
+const AW_BY_NAME={}; AWARE.forEach(a=>AW_BY_NAME[a.n.toLowerCase()]=a);
+function awareOf(generic){ return AW_BY_NAME[String(generic).toLowerCase()] || null; }
+
+/* Counter staff type what is printed on the strip: caps, hyphens, no spaces,
+   a strength suffix, or a slip of the finger. Normalise both sides to
+   alphanumerics, then widen in tiers, cheapest first. */
+const FORMWORDS=/\b(tab|tabs|tablet|tablets|cap|caps|capsule|capsules|inj|injection|syrup|syp|susp|suspension|drops?|dry|ds|dt|df|forte|plus|gel|cream|ointment|eye|ear|ml|gm|mg|mcg)\b/g;
+const norm=t=>String(t).toLowerCase().replace(/[^a-z0-9]+/g,'');
+const stripUnits=q=>q.replace(/(mg|mcg|ml|gm|g)$/,'');
+BRANDS.forEach(b=>{ b._n=norm(b.b); b._c=norm(String(b.b).toLowerCase().replace(FORMWORDS,'')); b._g=norm(b.g);
+  b._a=(b._c.match(/^[a-z]+/)||[b._c])[0]; });   // brand word without the strength, for typo matching
+AWARE.forEach(a=>{ a._n=norm(a.n); });
+NONAB.forEach(b=>{ b._n=norm(b.b); });
+
+function lev(a,b,max){                       // bounded edit distance
+  if(Math.abs(a.length-b.length)>max) return max+1;
+  let prev=Array.from({length:b.length+1},(_,i)=>i), cur=new Array(b.length+1);
+  for(let i=1;i<=a.length;i++){
+    cur[0]=i; let best=i;
+    for(let j=1;j<=b.length;j++){
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+      if(cur[j]<best) best=cur[j];
+    }
+    if(best>max) return max+1;
+    [prev,cur]=[cur,prev];
+  }
+  return prev[b.length];
+}
+
+function lookupOther(qRaw){
+  const q=stripUnits(norm(qRaw));
+  if(q.length<3) return [];
+  const out=[];
+  for(const b of NONAB){
+    if(b._n.startsWith(q)) out.push({...b,rank:0});
+    else if(b._n.includes(q)) out.push({...b,rank:1});
+    if(out.length>40) break;
+  }
+  out.sort((x,y)=>x.rank-y.rank || x.b.length-y.b.length);
+  return out.slice(0,5);
+}
+
+function lookup(qRaw){
+  const t=performance.now();
+  const q=stripUnits(norm(qRaw));
+  if(q.length<3){ lookupMs=0; return []; }
+  const hits=[], seen=new Set();
+  for(const v of provisional){                               // added at this counter, not yet adjudicated
+    if(v.status==='rejected') continue;
+    if(norm(v.brand).includes(q)) hits.push({kind:'brand',brand:v.brand,generic:v.generic||'',group:'Unverified',
+      strength:v.strength||'',form:v.form||'',rank:0,provisional:true,pid:v.id});
+  }
+  const add=(b,rank,fuzzy)=>{
+    const k=b.b+'|'+(b.s||'')+'|'+(b.f||'');
+    if(seen.has(k)) return; seen.add(k);
+    hits.push({kind:'brand',brand:b.b,generic:b.g,group:b.a,strength:b.s||'',form:b.f||'',rank,fuzzy:!!fuzzy,vet:!!b.v});
+  };
+  for(const b of BRANDS){
+    if(b._n.startsWith(q)||b._c.startsWith(q)) add(b,0);
+    else if(b._n.includes(q)||b._c.includes(q)) add(b,1);
+    else if(b._n.length>=5 && q.includes(b._n)) add(b,2);   // "azixon250mg" typed for "Azixon 250"
+    else if(b._g.includes(q)) add(b,4);                      // searching by generic
+  }
+  for(const a of AWARE){
+    if(a._n.startsWith(q)) hits.push({kind:'generic',brand:'',generic:a.n,group:a.g,strength:'',form:'',rank:3});
+    else if(a._n.includes(q)) hits.push({kind:'generic',brand:'',generic:a.n,group:a.g,strength:'',form:'',rank:5});
+  }
+  if(!hits.length && q.length>=4){                           // typo fallback, flagged in the UI
+    const qa=(q.match(/^[a-z]+/)||[q])[0], max=qa.length<=6?1:2;
+    for(const b of BRANDS){
+      if(!b._a || Math.abs(b._a.length-qa.length)>max) continue;
+      if(lev(qa, b._a, max)<=max) add(b,6,true);
+      if(hits.length>=6) break;
+    }
+  }
+  hits.sort((x,y)=>x.rank-y.rank || (x.brand||x.generic).length-(y.brand||y.generic).length);
+  lookupMs=Math.round((performance.now()-t)*10)/10;
+  return hits.slice(0,8);
+}
+
+/* ---- Same-molecule equivalents.
+   A factual lookup: this brand is this molecule, these other brands are the same
+   molecule. The tool never proposes a DIFFERENT molecule for a complaint — that
+   is a clinical decision and belongs with a prescriber. ---- */
+function equivalents(generic, excludeBrand){
+  if(!generic) return {stocked:[],other:[]};
+  const g=String(generic).toLowerCase(), stock=new Set((cfg.stock||[]).map(x=>x.toLowerCase()));
+  const seen=new Set(), stocked=[], other=[];
+  for(const b of BRANDS){
+    if(String(b.g).toLowerCase()!==g) continue;
+    const key=b.b+'|'+(b.s||'');
+    if(seen.has(key)||b.b===excludeBrand) continue;
+    seen.add(key);
+    (stock.has(b.b.toLowerCase())?stocked:other).push(b);
+  }
+  return {stocked, other:other.slice(0,14), total:stocked.length+other.length};
+}
+
+/* ---- safety rules (physician-reviewed placeholders; panel sign-off pending) ---- */
+function riskFlags(d){
+  const f=[], g=d.awareGroup, gen=(d.generic||'').toLowerCase();
+  if(g==='Reserve') f.push({id:'HR-RES',p:'P-R1',sev:'stop',l:'Reserve-group antibiotic'});
+  if(g==='Not recommended') f.push({id:'HR-NRC',p:'P-N1',sev:'stop',l:'Not-recommended fixed-dose combination'});
+  if(g==='Needs panel decision'||g==='Unclassified') f.push({id:'HR-UNC',p:'P-U1',sev:'warn',l:'Combination not classified by AWaRe'});
+  if(g==='Antituberculosis') f.push({id:'HR-TB',p:'P-TB1',sev:'stop',l:'Antituberculosis drug — programme-supervised treatment'});
+  if(d.vet) f.push({id:'HR-VET',p:'P-VT1',sev:'warn',l:'Veterinary antibiotic'});
+  if(g==='Unverified') f.push({id:'HR-UNV',p:'P-UV1',sev:'warn',l:'Product not yet verified by the research team'});
+  if(/floxacin/.test(gen) && ['<2','2–11','12–17'].includes(d.ageBand)) f.push({id:'HR-FQ',p:'P-FQ1',sev:'warn',l:'Fluoroquinolone in a person under 18'});
+  if(d.ageBand==='<2') f.push({id:'HR-U2',p:'P-CH1',sev:'warn',l:'Child under 2 years'});
+  if(d.pregnant) f.push({id:'HR-PRG',p:'P-PG1',sev:'warn',l:'Pregnancy'});
+  if(d.qty && d.qty<6 && /tab|cap/i.test(d.form||'tab')) f.push({id:'HR-SHC',p:'P-SH1',sev:'warn',l:'Quantity below a usual course'});
+  return f;
+}
+function buildPrompt(d){
+  const flags=riskFlags(d), ids=[];
+  let sev='info';
+  const blocks=[];
+  const gp={'Access':'P-A1','Watch':'P-W1','Reserve':'P-R1','Not recommended':'P-N1'}[d.awareGroup];
+  if(gp){ blocks.push(gp); }
+  if(!d.rx) blocks.push('P-NP1');
+  if(d.redFlags && d.redFlags.length){ blocks.push('P-RF1'); sev='stop'; }
+  flags.forEach(f=>{ blocks.push(f.p); if(f.sev==='stop') sev='stop'; else if(sev==='info') sev='warn'; });
+  if(!d.counselDays) blocks.push('P-CO1');
+  const seen=new Set(), out=[];
+  blocks.forEach(id=>{ if(!seen.has(id)&&PROMPTS[id]){ seen.add(id); ids.push(id); out.push({id,...PROMPTS[id]}); } });
+  return {sev,ids,items:out,flags};
+}
+
+/* ---- primary outcome: pathway-specific stewardship concordance ---- */
+/* Each component is yes | no | na | unassessed.
+   na         = not applicable to this pathway or encounter.
+   unassessed = applicable, but not recorded at the counter.
+   An encounter is concordant only when every applicable component is yes.
+   One "no" makes it discordant. A missing assessment makes it neither: the
+   outcome is left empty rather than silently counted as concordant. */
+const Y='yes', N='no', NA='na', UN='unassessed';
+const yn = v => v===true ? Y : v===false ? N : UN;          // boolean, unrecorded -> unassessed
+const tick = v => v ? Y : N;                                 // a checkbox is always answered
+const match3 = v => v==='yes' ? Y : v==='no' ? N : v==='na' ? NA : UN;
+
+/* PRIMARY ENDPOINT - COUNTER-AMR Nepal, frozen 12 October 2026.
+   Population: non-prescription antibiotic encounters. That is the problem under
+   study: the counter where no prescription arrives and an antibiotic is handed
+   over anyway.
+   Unit: the encounter, including those ending in referral or non-dispensing.
+   Concordant when all four hold:
+     1  reason for the request recorded
+     2  red-flag screening performed
+     3  referral made where a red flag was present      (na if none present)
+     4  duration advice AND safety-net advice given     (na if nothing dispensed)
+   Deliberately excluded: product identification (tool performance, near ceiling)
+   and dosing advice (near universal at baseline). AWaRe group is NOT a component:
+   the tool never substitutes a molecule, so it must not be judged on doing so.
+   Any component 'no' -> 0. All applicable 'yes' -> 1. Otherwise unscorable. */
+const PRIMARY_VERSION = 'PO-2026.10.12';
+function primaryOutcome(d){
+  if(d.rx) return {eligible:false, met:null, nUnass:0};
+  const dispensed = d.action==='dispensed' || d.action==='changed';
+  const c = {
+    indicationCaptured: tick((d.inds||[]).length>0),
+    redFlagScreened:    yn(d.screened),
+    referredIfFlag:     !(d.redFlags && d.redFlags.length) ? NA : tick(d.referred===true),
+    durationGiven:      dispensed ? tick(!!d.counselDays) : NA,
+    safetyNetGiven:     dispensed ? tick(!!d.safetyNet)   : NA
+  };
+  const v = Object.values(c);
+  const nUnass = v.filter(x=>x===UN).length;
+  return {eligible:true, met: v.includes(N) ? false : (nUnass ? null : true), nUnass, parts:c};
+}
+
+function concordance(d){
+  const c={};
+  c.identified = tick(!!d.generic && d.awareGroup!=='Unknown');
+  const dispensed = d.action==='dispensed' || d.action==='changed';
+
+  if(d.rx){
+    c.pathway='prescription';
+    c.rxConcordant   = yn(d.rxMatch);
+    c.strengthMatched= match3(d.strengthMatch);
+    c.formMatched    = match3(d.formMatch);
+    c.quantityAssessed= match3(d.qtyMatch);
+  }else{
+    c.pathway='non-prescription';
+    c.indicationCaptured = tick((d.inds||[]).length>0);
+    c.redFlagScreened    = yn(d.screened);
+    c.referredIfFlag     = !(d.redFlags && d.redFlags.length) ? NA : tick(d.referred===true);
+  }
+
+  // counselling applies only where something was handed over
+  if(dispensed){
+    c.doseGiven      = tick(!!d.counselDose);
+    c.durationGiven  = tick(!!d.counselDays);
+    c.safetyNetGiven = tick(!!d.safetyNet);
+  }else{
+    c.doseGiven = c.durationGiven = c.safetyNetGiven = NA;
+  }
+
+  const hs = d.hasStop===true ? true : d.hasStop===false ? false : null;
+  c.safetyHandled = hs===null ? UN : tick(!hs || !dispensed);
+
+  const vals = Object.keys(c).filter(k=>k!=='pathway').map(k=>c[k]);
+  c.anyFail   = vals.includes(N);
+  c.anyUnass  = vals.includes(UN);
+  c.nUnass    = vals.filter(v=>v===UN).length;
+  // met: true | false | null (null = cannot be scored, exported as an empty cell)
+  c.met = c.anyFail ? false : (c.anyUnass ? null : true);
+  return c;
+}
+
+/* ---- DDD (illustrative only; not part of the primary outcome) ---- */
+const DDD={'amoxicillin':1.5,'amoxicillin + clavulanic acid':1.5,'azithromycin':0.3,'ciprofloxacin':1,'cefixime':0.4,
+ 'ceftriaxone':2,'metronidazole':1.5,'levofloxacin':0.5,'cefuroxime':0.5,'doxycycline':0.1,'ofloxacin':0.4,
+ 'cefpodoxime':0.4,'clarithromycin':0.5,'norfloxacin':0.8,'cephalexin':2,'cefalexin':2,'erythromycin':1,'linezolid':1.2,
+ 'sulfamethoxazole + trimethoprim':1.92,'nitrofurantoin':0.2,'cloxacillin':2,'cefadroxil':2};
+function dddOf(t){ const d=DDD[String(t.generic).toLowerCase()]; if(!d||!t.qty||!t.strengthMg) return 0;
+  return Math.round((t.qty*t.strengthMg/1000)/d*100)/100; }
+
+/* ============================ views ============================ */
+const stage=()=>document.getElementById('stage');
+
+function render(){
+  document.getElementById('phId').textContent=cfg.pharmacyId;
+  const adv=cfg.phase==='advisory';
+  const pb=document.getElementById('phaseBtn');
+  pb.className='phasepill '+(adv?'advisory':'silent');
+  document.getElementById('phaseTxt').textContent=adv?'Advisory':'Silent';
+  renderTabs();
+  const s=stage();
+  const view = tab + '|' + (draft ? draft.stage : '-');
+  const keep = (view === lastView) ? s.scrollTop : 0;   // ticking a box must not throw the page to the top
+  lastView = view;
+  if(tab==='counter') viewCounter(s);
+  else if(tab==='log') viewLog(s);
+  else if(tab==='surv') viewSurv(s);
+  else viewSetup(s);
+  s.scrollTop = keep;
+}
+function renderTabs(){
+  const items=[['counter','Counter','M3 11h18M5 11V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4M6 11v8M18 11v8M4 19h16'],
+    ['log','Log','M5 4h11l3 3v13H5zM9 11h7M9 15h5'],
+    ['surv','Surveillance','M4 19V9M10 19V5M16 19v-6M22 19H2'],
+    ['setup','Setup','M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6M4.5 12a7.5 7.5 0 0 1 .1-1.2l-1.8-1.4 1.9-3.3 2.2.9a7.5 7.5 0 0 1 2-1.2L9.3 2.6h3.8l.4 2.3a7.5 7.5 0 0 1 2 1.2l2.2-.9 1.9 3.3-1.8 1.4a7.5 7.5 0 0 1 0 2.4l1.8 1.4-1.9 3.3-2.2-.9a7.5 7.5 0 0 1-2 1.2l-.4 2.3H9.3l-.4-2.3a7.5 7.5 0 0 1-2-1.2l-2.2.9-1.9-3.3 1.8-1.4A7.5 7.5 0 0 1 4.5 12Z']];
+  document.getElementById('tabs').innerHTML=items.map(([id,l,p])=>
+    `<button role="tab" aria-selected="${tab===id}" data-tab="${id}"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="${p}"/></svg>${l}</button>`).join('');
+}
+
+/* ---------- COUNTER ---------- */
+function viewCounter(s){
+  if(!draft){ draft={stage:'intake',rx:null,inds:[],indOther:'',encId:'E'+Date.now().toString(36).toUpperCase(),seq:1}; return viewIntake(s); }
+  if(draft.stage==='search') return viewSearch(s);
+  if(draft.stage==='intake') return viewIntake(s);
+  if(draft.stage==='addproduct') return viewAddProduct(s);
+  if(draft.stage==='capture') return viewCapture(s);
+  if(draft.stage==='prompt') return viewPrompt(s);
+  if(draft.stage==='outcome') return viewOutcome(s);
+  if(draft.stage==='saved') return viewSaved(s);
+}
+
+/* Orientation for a first-time reader (a reviewer, not a pharmacist). Shown once,
+   dismissed for good, and absent from a configured shop because a pharmacist who
+   has been trained does not need it. */
+const ORIENT_KEY='dcsst.oriented';
+/* Simulated traffic is loaded on first run so the analysis screens are not empty for a
+   first-time reader. Everywhere it could be mistaken for a finding, it says so. */
+function demoNotice(){
+  return cfg.seeded ? `<div class="note warn" style="margin:0">Simulated counter traffic, generated
+    to exercise the analysis screens. These are not study findings and no real pharmacy or
+    customer is represented. Clear it under Setup.</div>` : '';
+}
+function oriented(){ try{ return localStorage.getItem(ORIENT_KEY)==='1' }catch(e){ return false } }
+function orientHtml(){
+  if(oriented()) return '';
+  return `<div class="orient">
+    <h3>What you are looking at</h3>
+    <p class="tiny" style="margin:0 0 8px">A counter-level tool for retail pharmacies in Nepal, built as the measurement
+      instrument for a stepped-wedge study of antibiotic stewardship. Sample pharmacy, sample data.</p>
+    <ol>
+      <li>The sale is recorded in the order it happens &mdash; the customer speaks first, the shelf comes second.</li>
+      <li><b>Silent</b> records only. <b>Advisory</b> adds AWaRe grouping and counselling prompts.
+        Use the toggle at the top right to switch: the difference between those two screens is the intervention being tested.</li>
+      <li>The register covers all 16,831 products licensed in Nepal, so &ldquo;is this an antibiotic?&rdquo; has a real answer.
+        Try <span class="mono">azixon</span>, then <span class="mono">abamol</span>.</li>
+    </ol>
+    <button class="btn sm" id="dismissOrient" style="margin-top:10px">Got it</button>
+  </div>`;
+}
+
+/* The sale starts when the customer speaks: a complaint, or a prescription.
+   Both are known before the pharmacist turns to the shelf, so both are
+   captured before the product — otherwise we ask what was already answered. */
+function viewIntake(s){
+  const d=draft;
+  s.innerHTML=`<div class="stack">
+    ${orientHtml()}
+    <div><div class="eyebrow">Function 4 · Record for the study</div>
+      <h1 style="margin-top:3px">How did this sale start?</h1></div>
+    <div class="seg">
+      <button data-rx="0" aria-pressed="${d.rx===false}">Customer described a problem</button>
+      <button data-rx="1" aria-pressed="${d.rx===true}">Customer brought a prescription</button>
+    </div>
+    ${d.rx===false?`<div class="stack-s">
+      <div class="eyebrow">What did they say? <span style="text-transform:none;letter-spacing:0;font-weight:400">Tap every problem they mention</span></div>
+      <div class="chips">${INDICATIONS.map(i=>`<button class="chip" data-ind="${i.id}" aria-pressed="${d.inds.includes(i.id)}">
+        ${i.l}${i.np?`<span class="tiny" style="display:block;opacity:.75">${i.np}</span>`:''}</button>`).join('')}</div>
+      ${d.inds.includes('other')?`<input type="text" id="indother" value="${esc(d.indOther||'')}" placeholder="What else did they say?" aria-label="Other symptom">`:''}
+      ${d.inds.length>1?`<div class="tiny">${d.inds.length} problems recorded</div>`:''}
+    </div>`:''}
+    ${(d.rx===true||d.inds.length)?`<button class="btn primary wide" id="go">Find the medicine</button>`:
+      '<div class="note">Tap one or more. Whatever the customer said.</div>'}
+  </div>`;
+  s.querySelectorAll('[data-rx]').forEach(b=>b.onclick=()=>{ d.rx=b.dataset.rx==='1'; if(d.rx){ d.inds=[]; d.indOther=''; } render(); });
+  s.querySelectorAll('[data-ind]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.ind;
+    d.inds = d.inds.includes(id) ? d.inds.filter(x=>x!==id) : d.inds.concat(id);
+    if(!d.inds.includes('other')) d.indOther='';
+    render();
+  });
+  const io=s.querySelector('#indother'); if(io) io.addEventListener('input',e=>{ d.indOther=e.target.value; });
+  const g=s.querySelector('#go'); if(g) g.onclick=()=>{ d.stage='search'; render(); };
+  const dz=s.querySelector('#dismissOrient');
+  if(dz) dz.onclick=()=>{ try{ localStorage.setItem(ORIENT_KEY,'1') }catch(e){} render(); };
+}
+
+function viewSearch(s){
+  const today=tx.filter(t=>t.d===dstr()).length;
+  s.innerHTML=`
+  <div class="stack">
+    <div>
+      <div class="eyebrow">Function 1 · Identify</div>
+      <h1 style="margin-top:3px">Which medicine is being sold?</h1>
+    </div>
+    <div class="searchwrap">
+      <input type="search" id="q" placeholder="Brand or generic name" autocomplete="off" enterkeyhint="search" aria-label="Search brand or generic name">
+      <div class="tiny" style="margin-top:5px">Names appear after three letters. Hyphens, capitals and the strength do not matter.</div>
+      <div id="res"></div>
+    </div>
+    <div class="row" style="gap:6px">
+      <span class="tiny">Common:</span>
+      ${['Azixon','Am-Clav','Acocip','Apilox','Refix'].map(b=>`<button class="chip quick" data-q="${b}">${b}</button>`).join('')}
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div><div class="eyebrow">Logged today</div><div class="mono" style="font-size:22px;font-weight:600">${today}</div></div>
+        <div style="text-align:right"><div class="eyebrow">Mode</div><div style="font-size:13px;font-weight:600;color:var(--${cfg.phase==='advisory'?'accent':'fg-2'})">${cfg.phase==='advisory'?'Advisory prompts on':'Recording only'}</div></div>
+      </div>
+    </div>
+    <div class="note">Non-antibiotic sales are not recorded. If the medicine is not an antibiotic, close the tool and continue as usual.</div>
+  </div>`;
+  const q=document.getElementById('q'), res=document.getElementById('res');
+  const run=()=>{
+    const hits=lookup(q.value);
+    if(q.value.trim().length<3){ res.innerHTML=''; return; }
+    res.innerHTML = hits.length ? `<div class="results">${hits.map((h,i)=>{
+        const g=h.group || (awareOf(h.generic)?awareOf(h.generic).g:'Unknown');
+        const showG = cfg.phase==='advisory';
+        return `<button data-i="${i}"><span style="flex:1;min-width:0">
+          <span class="rname">${esc(h.brand||h.generic)}</span>${h.fuzzy?' <span class="tiny" style="color:var(--watch)">closest match — check the strip</span>':''}${h.provisional?' <span class="tiny" style="color:var(--accent)">added here, awaiting review</span>':''}
+          <span class="rgen"> · ${esc(h.brand? (h.generic||'molecule not recorded') : 'generic name')}${h.strength?' · '+esc(h.strength):''}</span>
+          </span>${showG&&h.vet?'<span class="badge b-vet">Veterinary</span>':''}${showG?`<span class="badge ${groupKey(g)}">${esc(groupLabel(g))}</span>`:''}</button>`;
+      }).join('')}</div>
+      <div class="row" style="margin-top:8px;justify-content:space-between;gap:8px">
+        <span class="tiny mono">${hits.length} match${hits.length>1?'es':''} · ${lookupMs} ms</span>
+        <span class="row" style="gap:6px"><button class="btn sm" id="subst">Don't have it?</button>
+        <button class="btn sm" id="addnew">Add product</button></span>
+      </div>
+      <div id="sub"></div>`
+    : (()=>{
+        const other=lookupOther(q.value);
+        const known=other.filter(o=>!o.u), unsure=other.filter(o=>o.u);
+        if(known.length) return `<div class="card" style="margin-top:8px;border-color:var(--access)">
+          <div class="row" style="gap:8px;align-items:baseline"><h3>Not an antibiotic</h3>
+            <span class="badge" style="background:var(--access-bg);color:var(--access)">Nothing to record</span></div>
+          ${known.map(o=>`<div class="row" style="justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-soft)">
+            <span style="min-width:0;font-weight:600;font-size:14.5px">${esc(o.b)}</span>
+            <span class="tiny" style="text-align:right;white-space:nowrap">${esc(o.g||'')}${o.c?' · '+esc(o.c):''}</span></div>`).join('')}
+          <p class="muted" style="margin:10px 0 0">Registered, but not an antibiotic. Sell it as usual &mdash; the study records antibiotics only.</p>
+          <button class="btn sm" id="addnew" style="align-self:flex-start;margin-top:10px">This is an antibiotic &mdash; add it</button>
+        </div>`;
+        if(unsure.length) return `<div class="card" style="margin-top:8px;border-color:var(--watch)">
+          <h3>Cannot confirm</h3>
+          ${unsure.map(o=>`<div class="row" style="justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-soft)">
+            <span style="min-width:0;font-weight:600;font-size:14.5px">${esc(o.b)}</span>
+            <span class="tiny" style="text-align:right">${esc(o.g||'')}</span></div>`).join('')}
+          <p class="muted" style="margin:10px 0 0">This product is registered, but the register records no composition for it, so the tool cannot say whether it is an antibiotic. Read the strip: if it is one, add it.</p>
+          <button class="btn primary wide" id="addnew" style="margin-top:10px">This is an antibiotic &mdash; add it</button>
+        </div>`;
+        return `<div class="card" style="margin-top:8px">
+          <h3>Not in the register at all</h3>
+          <p class="muted" style="margin:6px 0 11px">Nothing of that name is registered in Nepal, as an antibiotic or anything else. If you are holding the strip and it is an antibiotic, add it &mdash; that is a finding in itself.</p>
+          <button class="btn primary wide" id="addnew">Add this product</button>
+        </div>`;
+      })();
+    res._hits=hits;
+    if(!hits.length){
+      const o=lookupOther(q.value);
+      res._other = o.length ? (o.some(x=>!x.u) ? 'not-antibiotic' : 'unclassified') : 'not-registered';
+    } else res._other=null;
+    logSearch(q.value.trim(), hits.length, 'typing');
+  };
+  q.addEventListener('input',run);
+  q.addEventListener('blur',()=>{ if(res._other) logSearch(q.value.trim(), 0, res._other); });
+  document.querySelectorAll('.quick').forEach(b=>b.onclick=()=>{ q.value=b.dataset.q; run(); q.focus(); });
+  res.addEventListener('click',e=>{
+    const b=e.target.closest('button[data-i]');
+    if(b){ const h=res._hits[+b.dataset.i]; logSearch(q.value.trim(), res._hits.length, h.fuzzy?'resolved-fuzzy':'resolved'); startDraft(h); return; }
+    if(e.target.id==='subst'){
+      const h=(res._hits||[])[0];
+      const sub=s.querySelector('#sub');
+      sub.innerHTML = h&&h.generic ? `<div class="card" style="margin-top:9px">
+          <div class="eyebrow">Same medicine as ${esc(h.brand||h.generic)}</div>
+          ${equivPanel(h.generic, h.brand).replace('<details class="acc">','<details class="acc" open>')}
+        </div>` : '<div class="note" style="margin-top:9px">Search the brand the customer asked for first.</div>';
+      return;
+    }
+    if(e.target.id==='addnew'){ draft={stage:'addproduct',typed:q.value.trim(),brand:q.value.trim(),
+      generic:'',strength:'',form:'Tablet',mfr:'',photo:null}; render(); }
+  });
+}
+
+/* Every lookup is logged, resolved or not. Without this, a search that fails
+   and is abandoned leaves no trace, and lookup success cannot be computed. */
+function logSearch(q, hits, outcome){
+  if(!q || q.length<3) return;
+  const last=searches[searches.length-1];
+  if(last && last.o==='typing' && q.startsWith(last.q)) searches.pop();   // keep the final form of a query
+  searches.push({ts:new Date().toISOString(), ph:cfg.pharmacyId, staff:cfg.staffCode, phase:cfg.phase,
+    q, n:hits, ms:lookupMs, o:outcome});
+  if(outcome!=='typing') save();
+}
+
+function startDraft(h){
+  const a=h.generic?awareOf(h.generic):null;
+  const grp=h.group || (a?a.g:'Unknown');
+  const pre={rx:draft?draft.rx:null, inds:(draft&&draft.inds)||[], indOther:(draft&&draft.indOther)||'',
+    encId:(draft&&draft.encId)||('E'+Date.now().toString(36).toUpperCase()), seq:(draft&&draft.seq)||1,
+    carry:(draft&&draft.carry)||null};
+  t0=t0||performance.now();
+  draft={stage:'capture',brand:h.brand||'',generic:h.generic||'',strength:h.strength||'',form:h.form||'tablet',
+    awareGroup:grp, eml:a?a.e:'', lookupMs, vet:!!h.vet,
+    encId:pre.encId, seq:pre.seq,
+    rx:pre.rx,rxMatch:null,strengthMatch:null,formMatch:null,qtyMatch:null,qty:'',inds:pre.inds.slice(),indOther:pre.indOther,
+    askedSymptoms:false,screened:false,redFlags:[],
+    pregnant:false,ageBand:'',sex:'',counselDose:false,counselDays:false,safetyNet:false,referred:false,
+    action:null,unresolved:h.kind==='unresolved',
+    ...(pre.carry||{})};   // a second medicine for the same customer inherits the shared answers
+  render();
+}
+
+/* ---- add a product the register does not hold ---- */
+function viewAddProduct(s){
+  const d=draft;
+  s.innerHTML=`<div class="stack">
+    <button class="btn sm" id="back" style="align-self:flex-start">&larr; Back to search</button>
+    <div>
+      <div class="eyebrow">Function 1 · Add from the strip</div>
+      <h1 style="margin-top:3px">New product</h1>
+      <p class="muted" style="margin:5px 0 0">Copy what is printed on the pack. The research team reviews every entry weekly and either corrects a spelling or adds it to the register.</p>
+    </div>
+    <div class="stack-s">
+      <div class="eyebrow">Brand, as printed</div>
+      <input type="text" id="ab" value="${esc(d.brand)}" autocapitalize="words" aria-label="Brand name as printed">
+      <div id="near"></div>
+    </div>
+    <div class="stack-s">
+      <div class="eyebrow">Generic name on the pack</div>
+      <input type="text" id="ag" value="${esc(d.generic)}" placeholder="Start typing — e.g. Amoxicillin" autocomplete="off" aria-label="Generic name">
+      <div id="gres"></div>
+      <div class="tiny">If the pack lists two medicines, enter both separated by +.</div>
+    </div>
+    <div class="row">
+      <div class="stack-s" style="flex:1;min-width:120px">
+        <div class="eyebrow">Strength</div>
+        <input type="text" id="as" value="${esc(d.strength)}" placeholder="500 mg" aria-label="Strength">
+      </div>
+      <div class="stack-s" style="flex:1;min-width:120px">
+        <div class="eyebrow">Form</div>
+        <select id="af" aria-label="Dosage form">${['Tablet','Capsule','Dry Syrup','Suspension','Injection','Drops','Ointment','Other']
+          .map(f=>`<option ${d.form===f?'selected':''}>${f}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="stack-s">
+      <div class="eyebrow">Manufacturer, if shown</div>
+      <input type="text" id="am" value="${esc(d.mfr)}" aria-label="Manufacturer">
+    </div>
+    <div class="stack-s">
+      <div class="eyebrow">Photo of the strip</div>
+      <label class="btn wide" for="ap" style="cursor:pointer">${d.photo?'Replace photo':'Take or choose a photo'}</label>
+      <input type="file" id="ap" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0" aria-label="Photo of the strip">
+      <div id="pv">${d.photo?`<img src="${d.photo}" alt="Strip photo" style="max-height:130px;border-radius:8px;border:1px solid var(--line)">`:'<span class="tiny">The photo is what lets the team confirm a spelling. Stored without any customer detail.</span>'}</div>
+    </div>
+    <button class="btn primary wide" id="save" ${d.brand.trim()?'':'disabled'}>Save and record the sale</button>
+    <div class="note">The sale is never blocked by a missing product. It is recorded with the product marked unverified, and the advice screen treats it as higher risk.</div>
+  </div>`;
+
+  const $=id=>s.querySelector(id);
+  $('#back').onclick=()=>{ draft=null; render(); };
+  $('#ab').addEventListener('input',e=>{
+    d.brand=e.target.value; $('#save').disabled=!d.brand.trim();
+    const n=norm(d.brand); const near=n.length>=3?BRANDS.filter(b=>b._n.includes(n)||n.includes(b._n)).slice(0,3):[];
+    $('#near').innerHTML = near.length ? `<div class="note warn" style="margin-top:6px">Already in the register — did you mean
+      ${near.map((b,i)=>`<button class="btn sm" data-pick="${i}" style="margin:4px 4px 0 0">${esc(b.b)}</button>`).join('')}</div>` : '';
+    $('#near')._near=near;
+    $('#near').querySelectorAll('[data-pick]').forEach(btn=>btn.onclick=()=>{
+      const b=$('#near')._near[+btn.dataset.pick];
+      startDraft({kind:'brand',brand:b.b,generic:b.g,group:b.a,strength:b.s||'',form:b.f||''});
+    });
+  });
+  $('#ag').addEventListener('input',e=>{
+    d.generic=e.target.value; const n=norm(d.generic);
+    const m=n.length>=3?AWARE.filter(a=>a._n.includes(n)).slice(0,4):[];
+    $('#gres').innerHTML = m.length?`<div class="results" style="margin-top:6px">${m.map((a,i)=>
+      `<button data-g="${i}"><span style="flex:1">${esc(a.n)}</span><span class="badge ${groupKey(a.g)}">${esc(groupLabel(a.g))}</span></button>`).join('')}</div>`:'';
+    $('#gres')._m=m;
+    $('#gres').querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{
+      d.generic=$('#gres')._m[+b.dataset.g].n; $('#ag').value=d.generic; $('#gres').innerHTML='';
+    });
+  });
+  ['as','af','am'].forEach((id,i)=>$('#'+id).addEventListener('input',e=>{ d[['strength','form','mfr'][i]]=e.target.value; }));
+  $('#ap').addEventListener('change',e=>{
+    const f=e.target.files&&e.target.files[0]; if(!f) return;
+    const img=new Image(), rd=new FileReader();
+    rd.onload=()=>{ img.onload=()=>{
+      const k=Math.min(1,360/Math.max(img.width,img.height));
+      const c=document.createElement('canvas'); c.width=img.width*k|0; c.height=img.height*k|0;
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      d.photo=c.toDataURL('image/jpeg',0.6);
+      $('#pv').innerHTML=`<img src="${d.photo}" alt="Strip photo" style="max-height:130px;border-radius:8px;border:1px solid var(--line)">`;
+    }; img.src=rd.result; };
+    rd.readAsDataURL(f);
+  });
+  $('#save').onclick=()=>{
+    const rec={id:'PV'+Date.now().toString(36).toUpperCase(), brand:d.brand.trim(), generic:d.generic.trim(),
+      strength:d.strength.trim(), form:d.form, mfr:d.mfr.trim(), photo:d.photo, typed:d.typed,
+      shop:cfg.pharmacyId, ts:new Date().toISOString(), status:'pending', resolution:'', resolvedTs:''};
+    provisional.unshift(rec); save();
+    startDraft({kind:'brand',brand:rec.brand,generic:rec.generic,group:'Unverified',
+      strength:rec.strength,form:rec.form,provisional:true,pid:rec.id});
+    draft.provisionalId=rec.id;
+    toast('Added — queued for weekly review');
+  };
+}
+
+function viewCapture(s){
+  const d=draft, g=d.awareGroup;
+  const rxSet=d.rx!==null;
+  s.innerHTML=`
+  <div class="stack">
+    <button class="btn sm" id="back" style="align-self:flex-start">&larr; Change medicine</button>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <div style="min-width:0">
+          <h2>${esc(d.brand||d.generic||'Unresolved product')}</h2>
+          <div class="muted">${d.unresolved?'Not in dictionary — flagged for weekly resolution':esc(d.generic)}${d.strength?' · '+esc(d.strength):''}</div>
+        </div>
+        ${cfg.phase==='advisory'?`<span class="badge ${groupKey(g)}">${esc(groupLabel(g))}</span>`:''}
+      </div>
+      ${cfg.phase==='advisory'&&d.eml?`<div class="tiny mono" style="margin-top:7px">WHO Model List: ${esc(d.eml)} · lookup ${d.lookupMs} ms</div>`:`<div class="tiny mono" style="margin-top:7px">lookup ${d.lookupMs} ms</div>`}
+    </div>
+    ${equivPanel(d.generic, d.brand)}
+
+    <div class="stack-s">
+      <div class="eyebrow">Prescription</div>
+      <div class="seg">
+        <button data-rx="1" aria-pressed="${d.rx===true}">Prescription shown</button>
+        <button data-rx="0" aria-pressed="${d.rx===false}">No prescription</button>
+      </div>
+    </div>
+
+    <div id="path">${rxSet?(d.rx?rxPath(d):npPath(d)):'<div class="note">Choose one to continue. The two answers follow different checks.</div>'}</div>
+
+    ${rxSet?`
+    <hr class="sep">
+    <div class="stack-s">
+      <div class="eyebrow">Quantity dispensed</div>
+      <div class="row">
+        <input type="number" id="qty" min="0" step="1" inputmode="numeric" value="${d.qty}" placeholder="e.g. 10" style="max-width:130px" aria-label="Quantity dispensed">
+        <span class="muted">${esc(d.form||'tablets')}</span>
+      </div>
+    </div>
+    <div class="stack-s">
+      <div class="eyebrow">Customer (no names recorded)</div>
+      <div class="chips" id="age">${AGEBANDS.map(a=>`<button class="chip" data-age="${a}" aria-pressed="${d.ageBand===a}">${a}</button>`).join('')}</div>
+      <div class="chips" id="sex">${SEXES.map(x=>`<button class="chip" data-sex="${x}" aria-pressed="${d.sex===x}">${x}</button>`).join('')}</div>
+      <label class="check ${d.pregnant?'on':''}"><input type="checkbox" id="preg" ${d.pregnant?'checked':''}><span>Pregnant or breastfeeding</span></label>
+    </div>
+    ${counselBlock(d)}
+    <button class="btn primary wide" id="next">${cfg.phase==='advisory'?'Check and continue':'Save this sale'}</button>
+    `:''}
+  </div>`;
+
+  s.querySelector('#back').onclick=()=>{ draft={stage:'search',rx:draft.rx,inds:(draft.inds||[]).slice(),indOther:draft.indOther||'',encId:draft.encId,seq:draft.seq,carry:draft.carry}; t0=0; render(); };
+  s.querySelectorAll('[data-rx]').forEach(b=>b.onclick=()=>{ d.rx=b.dataset.rx==='1'; render(); });
+  const bind=(sel,fn)=>{ const el=s.querySelector(sel); if(el) el.addEventListener('change',fn); };
+  bind('#qty',e=>{ d.qty=e.target.value?+e.target.value:''; });
+  bind('#preg',e=>{ d.pregnant=e.target.checked; render(); });
+  ['cdose','cdays','cnet'].forEach((id,i)=>bind('#'+id,e=>{ d[['counselDose','counselDays','safetyNet'][i]]=e.target.checked; render(); }));
+  const ask=s.querySelector('#asked'); if(ask) ask.addEventListener('change',e=>{ d.askedSymptoms=e.target.checked; d.screened=e.target.checked; render(); });
+  const nf=s.querySelector('#noflags'); if(nf) nf.onclick=()=>{ d.redFlags=[]; d.screened=true; render(); };
+  const ci=s.querySelector('#changeind'); if(ci) ci.onclick=()=>{ draft={stage:'intake',rx:d.rx,inds:(d.inds||[]).slice(),indOther:d.indOther||'',encId:d.encId,seq:d.seq}; render(); };
+  s.querySelectorAll('[data-age]').forEach(b=>b.onclick=()=>{ d.ageBand=d.ageBand===b.dataset.age?'':b.dataset.age; render(); });
+  s.querySelectorAll('[data-sex]').forEach(b=>b.onclick=()=>{ d.sex=d.sex===b.dataset.sex?'':b.dataset.sex; render(); });
+  s.querySelectorAll('[data-rxm]').forEach(b=>b.onclick=()=>{ d.rxMatch=b.dataset.rxm==='1'; render(); });
+  s.querySelectorAll('[data-qm]').forEach(b=>b.onclick=()=>{ d.qtyMatch=b.dataset.qm; render(); });
+  s.querySelectorAll('[data-sm]').forEach(b=>b.onclick=()=>{ d.strengthMatch=b.dataset.sm; render(); });
+  s.querySelectorAll('[data-fm]').forEach(b=>b.onclick=()=>{ d.formMatch=b.dataset.fm; render(); });
+  s.querySelectorAll('[data-rf]').forEach(b=>b.addEventListener('change',e=>{
+    const id=b.dataset.rf;
+    if(e.target.checked){ if(!d.redFlags.includes(id)) d.redFlags.push(id); }
+    else d.redFlags=d.redFlags.filter(x=>x!==id);
+    render();
+  }));
+  const sc=s.querySelector('#screened'); if(sc) sc.addEventListener('change',e=>{ d.screened=e.target.checked; render(); });
+  const nx=s.querySelector('#next'); if(nx) nx.onclick=submitDraft;
+}
+
+function rxPath(d){
+  return `<div class="stack-s">
+    <span class="pathtag">Pathway A · prescription present</span>
+    <div class="eyebrow" style="margin-top:2px">Does the product match the prescription?</div>
+    <div class="seg">
+      <button data-rxm="1" aria-pressed="${d.rxMatch===true}">Matches</button>
+      <button data-rxm="0" aria-pressed="${d.rxMatch===false}">Substituted</button>
+    </div>
+    <div class="eyebrow">Strength</div>
+    <div class="seg">
+      <button data-sm="yes" aria-pressed="${d.strengthMatch==='yes'}">Same</button>
+      <button data-sm="no" aria-pressed="${d.strengthMatch==='no'}">Different</button>
+      <button data-sm="na" aria-pressed="${d.strengthMatch==='na'}">Not stated</button>
+    </div>
+    <div class="eyebrow">Form</div>
+    <div class="seg">
+      <button data-fm="yes" aria-pressed="${d.formMatch==='yes'}">Same</button>
+      <button data-fm="no" aria-pressed="${d.formMatch==='no'}">Different</button>
+      <button data-fm="na" aria-pressed="${d.formMatch==='na'}">Not stated</button>
+    </div>
+    <div class="eyebrow">Quantity and duration</div>
+    <div class="seg">
+      <button data-qm="yes" aria-pressed="${d.qtyMatch==='yes'}">As written</button>
+      <button data-qm="no" aria-pressed="${d.qtyMatch==='no'}">Partial</button>
+      <button data-qm="na" aria-pressed="${d.qtyMatch==='na'}">Not stated</button>
+    </div>
+    ${d.rxMatch===false?`<div class="note warn">Record what was actually handed over. The tool never asks you to change a clinician's choice because of its AWaRe group.</div>`:''}
+  </div>`;
+}
+function npPath(d){
+  const adv=cfg.phase==='advisory', flagged=d.redFlags.length>0;
+  const names=(d.inds||[]).map(id=>{ const i=INDICATIONS.find(x=>x.id===id); return id==='other'&&d.indOther? d.indOther : (i?i.l:id); });
+  return `<div class="stack-s">
+    <span class="pathtag">Pathway B · no prescription</span>
+    <div class="row" style="justify-content:space-between">
+      <span class="muted" style="min-width:0">Reason: <b>${names.length?esc(names.join(', ')):'not recorded'}</b></span>
+      <button class="btn sm" id="changeind">Change</button>
+    </div>
+    ${adv ? `
+      <div class="eyebrow" style="margin-top:6px">Function 3 · Ask before handing over</div>
+      <div class="stack-s">
+        <button class="btn wide" id="noflags" aria-pressed="${d.screened&&!flagged}"
+          style="${d.screened&&!flagged?'border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600':''}">None of these apply</button>
+        ${REDFLAGS.map(r=>`<label class="check ${d.redFlags.includes(r.id)?'on':''}" style="padding:9px 12px"><input type="checkbox" data-rf="${r.id}" ${d.redFlags.includes(r.id)?'checked':''}><span style="font-size:14px">${r.l}</span></label>`).join('')}
+      </div>
+      ${flagged?`<div class="prompt stop"><h3>Refer, do not dispense</h3><p style="margin:4px 0 0;font-size:14px">${d.redFlags.length} red flag${d.redFlags.length>1?'s':''}. The referral slip is on the next screen.</p></div>`:''}
+    ` : `
+      <label class="check ${d.askedSymptoms?'on':''}"><input type="checkbox" id="asked" ${d.askedSymptoms?'checked':''}><span><b>Asked the customer about their symptoms</b><br><span class="tiny">Recorded as it happens. No checklist during the baseline months — the tool must not change what it is measuring.</span></span></label>
+    `}
+  </div>`;
+}
+
+function equivPanel(generic, exclude){
+  const e=equivalents(generic, exclude);
+  if(!e.total) return '';
+  const row=b=>`<div class="row" style="justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line-soft)">
+    <span style="min-width:0;font-size:14px">${esc(b.b)}</span>
+    <span class="tiny mono" style="white-space:nowrap">${esc(b.s||'')} ${esc(b.f||'')}</span></div>`;
+  return `<details class="acc"><summary>Same medicine, other brands <span class="tiny mono">${e.total}</span></summary>
+    <div class="body">
+      ${e.stocked.length?`<div class="eyebrow" style="color:var(--access)">On your shelf</div>${e.stocked.map(row).join('')}`:''}
+      ${e.other.length?`<div class="eyebrow" style="margin-top:${e.stocked.length?'12px':'0'}">Registered in Nepal</div>${e.other.map(row).join('')}`:''}
+      <p class="tiny" style="margin:11px 0 0">Same molecule as ${esc(generic)}. Check strength and form against what the customer needs. The tool never suggests a different medicine for a complaint — that is for a prescriber.</p>
+      ${!(cfg.stock||[]).length?`<p class="tiny" style="margin:7px 0 0">Mark what this shop stocks in Setup and your own brands appear first.</p>`:''}
+    </div></details>`;
+}
+
+function counselBlock(d){
+  /* Ready-made sentences the pharmacist can read out. Deliberately generic:
+     none of them names a drug, a dose or a number of days, because that is a
+     prescribing decision. The tool records whether each was actually used.
+     In the baseline the three tick boxes remain - they are the measurement -
+     but every instructional label is replaced by a neutral description of what
+     is being recorded, so the baseline does not teach what it is measuring. */
+  const adv = cfg.phase==='advisory';
+  return `<hr class="sep">
+  <div class="stack-s">
+    <div class="eyebrow">At handover &mdash; what was said</div>
+    <label class="check ${d.counselDose?'on':''}"><input type="checkbox" id="cdose" ${d.counselDose?'checked':''}>
+      <span><b>How to take it</b><br><span class="tiny">${adv?'The 0&#8209;1&#8209;0 or 1&#8209;1&#8209;1 grid &mdash; times per day.':'Whether the dosing was said.'}</span></span></label>
+
+    <label class="check ${d.counselDays?'on':''}"><input type="checkbox" id="cdays" ${d.counselDays?'checked':''}>
+      <span><b>${adv?'How many days, and finish the course':'How many days'}</b>
+        ${cfg.phase==='advisory'?`<br><span class="script">&ldquo;Aushadhi pura khanuhos, niko bhaye pani.&rdquo;</span>`:''}
+        <br><span class="tiny">${adv?'Finish all of them, even if you feel better. Say the number of days as well.':'Whether the number of days was said.'}</span></span></label>
+
+    <label class="check ${d.safetyNet?'on':''}"><input type="checkbox" id="cnet" ${d.safetyNet?'checked':''}>
+      <span><b>When to come back</b>
+        ${cfg.phase==='advisory'?`<br><span class="script">&ldquo;Tin din ma niko bhaena bhane doctor kaha jaanuhos.&rdquo;</span>`:''}
+        <br><span class="tiny">${adv?'If you are not better in three days, see a doctor. Sooner if worse.':'Whether advice to come back was given.'}</span></span></label>
+    <p class="tiny" style="margin:2px 0 0">Tick only what was actually said.${cfg.phase==='advisory'?' The wording is a suggestion, not a script you must follow.':''}</p>
+  </div>`;
+}
+
+function submitDraft(){
+  const d=draft;
+  d.secs=Math.round((performance.now()-t0)/100)/10;
+  const p=buildPrompt(d);
+  d.hasStop = p.sev==='stop';
+  d.promptIds=p.ids; d.promptSev=p.sev; d.flags=p.flags.map(f=>f.id);
+  if(cfg.phase==='advisory'){ d.stage='prompt'; }
+  else { d.promptIds=[]; d.promptSev='silent'; d.stage='outcome'; }   // ask, never assume
+  render();
+}
+
+/* Silent-phase close-out. Asking what happened is measurement, not advice, so it
+   belongs in the baseline: without it every encounter would be recorded as a sale
+   and a baseline referral would be invisible. No prompts, no groups, no scripts. */
+function viewOutcome(s){
+  const d=draft;
+  s.innerHTML=`<div class="stack">
+    <div><div class="eyebrow">Function 4 &middot; What happened</div>
+      <h1 style="margin-top:3px">${esc(d.brand||d.generic)}</h1></div>
+    <div class="stack-s">
+      <button class="btn wide" data-act="dispensed">Dispensed</button>
+      <button class="btn wide" data-act="referred">Referred, not dispensed</button>
+      <button class="btn wide" data-act="notdispensed">Not dispensed, other reason</button>
+    </div>
+    <p class="tiny">Record what actually happened. Nothing here changes what you should do.</p>
+    <button class="btn sm" id="bk" style="align-self:flex-start">&larr; Back</button>
+  </div>`;
+  s.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{
+    d.action=b.dataset.act;
+    if(b.dataset.act==='referred') d.referred=true;
+    commit();
+  });
+  s.querySelector('#bk').onclick=()=>{ d.stage='capture'; render(); };
+}
+
+function viewPrompt(s){
+  const d=draft, p=buildPrompt(d);
+  s.innerHTML=`<div class="stack">
+    <div><div class="eyebrow">Function 2 · Advise</div>
+      <h1 style="margin-top:3px">${esc(d.brand||d.generic)} <span class="badge ${groupKey(d.awareGroup)}" style="vertical-align:3px">${esc(groupLabel(d.awareGroup))}</span>${d.vet?' <span class="badge b-vet" style="vertical-align:3px">Veterinary</span>':''}</h1></div>
+    ${p.items.map(i=>`<div class="prompt ${p.sev==='stop'&&(i.id==='P-RF1'||i.id==='P-R1'||i.id==='P-N1')?'stop':(i.id==='P-CO1'?'info':(p.sev==='info'?'info':'warn'))}">
+        <h3>${esc(i.t)}</h3><ul>${i.b.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+        <div class="mono" style="margin-top:8px;font-size:12px;color:var(--fg-2)">${i.id}</div></div>`).join('')}
+    ${d.redFlags.length?`<button class="btn wide" id="slip">Print referral slip</button>`:''}
+    <hr class="sep">
+    <div class="eyebrow">Function 4 · What happened</div>
+    <div class="stack-s">
+      <button class="btn wide" data-act="dispensed">Dispensed as requested</button>
+      <button class="btn wide" data-act="changed">Changed after advice</button>
+      <button class="btn wide" data-act="referred">Referred, not dispensed</button>
+      <button class="btn wide" data-act="notdispensed">Not dispensed, other reason</button>
+    </div>
+    <button class="btn sm" id="flagout" style="align-self:center;color:var(--fg-3)">Report a wrong or unclear message</button>
+  </div>`;
+  s.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{
+    draft.action=b.dataset.act;
+    if(b.dataset.act==='referred') draft.referred=true;
+    commit();
+  });
+  const sl=s.querySelector('#slip'); if(sl) sl.onclick=()=>showSlip(d);
+  s.querySelector('#flagout').onclick=()=>{
+    adverse.push({ts:new Date().toISOString(),product:d.brand||d.generic,prompts:d.promptIds.join(' '),note:'flagged at counter'});
+    save(); toast('Sent for clinical review');
+  };
+}
+
+function showSlip(d){
+  const s=stage();
+  s.innerHTML=`<div class="stack">
+    <div class="card" style="border:2px dashed var(--line)">
+      <div class="eyebrow">Referral slip · Function 3</div>
+      <h2 style="margin:6px 0">Please see a health worker today</h2>
+      <p class="muted" style="margin:0 0 10px">The pharmacy could not safely supply an antibiotic for this problem.</p>
+      <div class="kv">
+        <dt>Reason</dt><dd>${d.redFlags.map(id=>REDFLAGS.find(r=>r.id===id).l).join('; ')}</dd>
+        <dt>Nearest</dt><dd>Urban Health Centre, Ward 12 — 08:00–17:00</dd>
+        <dt>Emergency</dt><dd>Ambulance 102</dd>
+        <dt>Issued</dt><dd>${cfg.pharmacyId} · ${new Date().toLocaleString()}</dd>
+      </div>
+    </div>
+    <div class="note">In the field version this prints to the shop's receipt printer or goes out by SMS. No customer identifiers are stored.</div>
+    <button class="btn primary wide" id="bk">Back</button>
+  </div>`;
+  s.querySelector('#bk').onclick=render;
+}
+
+function commit(){
+  const d=draft, c=concordance(d);
+  const rec={id:'T'+Date.now().toString(36).toUpperCase(),enc:d.encId||'',seq:d.seq||1,d:dstr(),ts:new Date().toISOString(),ph:cfg.pharmacyId,cluster:cfg.cluster,staff:cfg.staffCode,
+    phase:cfg.phase, brand:d.brand, generic:d.generic, strength:d.strength, strengthMg:parseInt(d.strength)||0, form:d.form,
+    aware:d.awareGroup, vet:!!d.vet, rx:d.rx, rxMatch:d.rxMatch, strengthMatch:d.strengthMatch, formMatch:d.formMatch, qtyMatch:d.qtyMatch, qty:d.qty||0, inds:(d.inds||[]).slice(), indOther:d.indOther||'',
+    screened:d.screened, askedSymptoms:!!d.askedSymptoms, redFlags:d.redFlags.slice(), counselDose:!!d.counselDose, counselDays:!!d.counselDays, safetyNet:!!d.safetyNet, referred:d.referred, action:d.action,
+    ageBand:d.ageBand, sex:d.sex, flags:d.flags||[], prompts:d.promptIds||[], secs:d.secs||0, lookupMs:d.lookupMs,
+    unresolved:!!d.unresolved||d.awareGroup==='Unverified', provisionalId:d.provisionalId||'', path:c.pathway, conc:c.met, comp:c, prim:primaryOutcome(d)};
+  tx.unshift(rec);
+  if(d.unresolved) unresolved.push({brand:d.brand,ts:rec.ts});
+  save(); draft={...d,stage:'saved',rec}; render();
+}
+
+function viewSaved(s){
+  const r=draft.rec, c=r.comp;
+  const rows=Object.keys(c).filter(k=>!['pathway','met'].includes(k));
+  const lbl={identified:'Product identified',rxConcordant:'Matches prescription',quantityAssessed:'Quantity assessable',
+    doseGiven:'Said how to take it',durationGiven:'Said how many days',safetyHandled:'Safety action taken',
+    indicationCaptured:'Reason recorded',redFlagScreened:'Symptoms asked about',
+    referredIfFlag:'Referred where indicated',highRiskHandled:'High-risk product handled'};
+  s.innerHTML=`<div class="stack">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2>Recorded</h2><span class="mono tiny">${r.id}</span></div>
+      ${r.seq>1?`<div class="pathtag" style="align-self:flex-start;color:var(--accent)">Medicine ${r.seq} for this customer</div>`:''}
+      <p class="muted" style="margin:6px 0 0">${esc(r.brand||r.generic)} · ${esc(r.aware)} · ${r.secs}s at the counter</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Study outcome · ${esc(c.pathway)} pathway</div>
+      <div style="font-size:16px;font-weight:600;margin:6px 0 10px" class="${c.met===true?'ok':c.met===false?'no':'na'}">${c.met===true?'Stewardship-concordant':c.met===false?'Not concordant':'Not scorable \u2014 '+c.nUnass+' item'+(c.nUnass===1?'':'s')+' not assessed'}</div>
+      <table><tbody>${rows.map(k=>`<tr><td>${lbl[k]||k}</td><td class="num ${c[k]?'ok':'no'}">${c[k]?'Yes':'No'}</td></tr>`).join('')}</tbody></table>
+      <p class="tiny" style="margin:9px 0 0">Component results are stored separately so the analysis can show which behaviour changed.</p>
+    </div>
+    ${r.phase==='silent'?'<div class="note">Silent phase. The sale was recorded and no advice was shown.</div>':''}
+    <button class="btn wide" id="more">Another medicine for this customer</button>
+    <button class="btn primary wide" id="again">Next customer</button>
+  </div>`;
+  s.querySelector('#again').onclick=()=>{ draft=null; t0=0; render(); };
+  s.querySelector('#more').onclick=()=>{
+    const d=draft;
+    draft={stage:'search', rx:d.rx, inds:(d.inds||[]).slice(), indOther:d.indOther||'',
+      encId:d.encId, seq:(d.seq||1)+1,
+      carry:{askedSymptoms:d.askedSymptoms, screened:d.screened, redFlags:(d.redFlags||[]).slice(),
+             counselDose:d.counselDose, counselDays:d.counselDays, safetyNet:d.safetyNet,
+             ageBand:d.ageBand, sex:d.sex, pregnant:d.pregnant, referred:d.referred}};
+    t0=0; render(); toast('Same customer — medicine ' + draft.seq);
+  };
+}
+
+/* ---------- LOG ---------- */
+function dstr(dt){ const d=dt||new Date(); return d.toISOString().slice(0,10); }
+function viewLog(s){
+  const list=tx.slice(0,60);
+  s.innerHTML=`<div class="stack">
+    <div class="row" style="justify-content:space-between"><h1>Dispensing log</h1><span class="tiny mono">${tx.length} sales</span></div>
+    ${demoNotice()}
+    ${list.length?`<div class="stack-s">${list.map(r=>`
+      <div class="card" style="padding:11px 13px">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div style="min-width:0">
+            <div style="font-weight:600;font-size:14px">${esc(r.brand||r.generic||'Unresolved')}</div>
+            <div class="tiny">${esc(r.generic||'—')}${r.qty?' · '+r.qty+' '+esc(r.form||''):''}</div>
+          </div>
+          <span class="badge ${groupKey(r.aware)}">${esc(groupLabel(r.aware))}</span>
+        </div>
+        <div class="row" style="margin-top:8px;gap:6px">
+          <span class="pathtag">${r.rx?'Rx':'No Rx'}</span>
+          <span class="pathtag" style="color:var(--${r.conc===true?'access':r.conc===false?'danger':'fg-3'})">${r.conc===true?'Concordant':r.conc===false?'Not concordant':'Not scorable'}</span>
+          ${r.redFlags.length?`<span class="pathtag" style="color:var(--danger)">${r.redFlags.length} red flag</span>`:''}
+          <span class="spacer"></span><span class="tiny mono">${r.ts.slice(11,16)} · ${r.phase}</span>
+        </div>
+      </div>`).join('')}</div>`
+    :'<div class="card"><p class="muted" style="margin:0">Nothing recorded yet. Sales appear here as they are entered.</p></div>'}
+  </div>`;
+}
+
+/* ---------- SURVEILLANCE ---------- */
+function viewSurv(s){
+  const sil=tx.filter(t=>t.phase==='silent'), adv=tx.filter(t=>t.phase==='advisory');
+  const cnt=g=>tx.filter(t=>t.aware===g).length;
+  const groups=['Access','Watch','Reserve','Not recommended'];
+  const colors={'Access':'var(--access)','Watch':'var(--watch)','Reserve':'var(--reserve)','Not recommended':'var(--notrec)'};
+  const known=groups.reduce((a,g)=>a+cnt(g),0)||1;
+  const access=pct(cnt('Access'),known);
+  const noRx=pct(tx.filter(t=>t.rx===false).length,tx.length||1);
+  const unres=pct(tx.filter(t=>t.unresolved).length,tx.length||1);
+  const medSecs=(()=>{const v=tx.map(t=>t.secs).filter(Boolean).sort((a,b)=>a-b);return v.length?v[Math.floor(v.length/2)]:0})();
+  // complete-case: encounters that could not be scored are excluded from the denominator
+  const scored=a=>a.filter(t=>t.conc===true||t.conc===false);
+  const concOf=a=>{const s=scored(a); return s.length?pct(s.filter(t=>t.conc===true).length,s.length):null;};
+  // primary endpoint: eligible, scorable, non-prescription encounters only
+  const primOf=a=>{
+    const e=a.filter(t=>t.prim&&t.prim.eligible&&(t.prim.met===true||t.prim.met===false));
+    return {n:e.length, pct:e.length?pct(e.filter(t=>t.prim.met===true).length,e.length):null};
+  };
+  const mols={};
+  tx.forEach(t=>{ if(!t.generic) return; const k=t.generic; mols[k]=mols[k]||{n:0,g:t.aware,ddd:0}; mols[k].n++; mols[k].ddd+=dddOf(t); });
+  const top=Object.entries(mols).sort((a,b)=>b[1].n-a[1].n).slice(0,8);
+
+  s.innerHTML=`<div class="stack">
+    <div><h1>Surveillance</h1><p class="muted" style="margin:3px 0 0">${tx.length} antibiotic sales · ${cfg.pharmacyId}, cluster ${cfg.cluster}</p></div>
+    ${demoNotice()}
+    <div class="tiles">
+      <div class="tile"><div class="v">${access}%</div><div class="l">Access share</div><div class="s">Target ≥70% by 2030</div></div>
+      <div class="tile"><div class="v">${noRx}%</div><div class="l">No prescription</div><div class="s">Secondary indicator</div></div>
+      <div class="tile"><div class="v">${medSecs}s</div><div class="l">Median entry</div><div class="s">UAT threshold 30s</div></div>
+      <div class="tile"><div class="v">${unres}%</div><div class="l">Unresolved brand</div><div class="s">${unresolved.length} queued</div></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">AWaRe distribution</div>
+      <div class="stackbar" style="margin:9px 0 8px">
+        ${groups.map(g=>{const p=pct(cnt(g),known); return p?`<div style="width:${p}%;background:${colors[g]}" title="${g} ${p}%">${p>=9?p+'%':''}</div>`:''}).join('')}
+      </div>
+      <div class="legend">${groups.map(g=>`<span><i style="background:${colors[g]}"></i>${g} ${cnt(g)}</span>`).join('')}</div>
+      <p class="tiny" style="margin:9px 0 0">Dispensing, not consumption. No catchment denominator, so this is not a population consumption rate.</p>
+    </div>
+
+    <div class="cols">
+      <div class="card">
+        <div class="eyebrow">Primary outcome &middot; non-prescription encounters</div>
+        <div class="stack-s" style="margin-top:9px">
+          ${[['Silent phase',primOf(sil)],['Advisory phase',primOf(adv)]].map(([l,o])=>`
+            <div><div class="row" style="justify-content:space-between"><span style="font-size:13px">${l}</span>
+              <span class="mono" style="font-size:13px;font-weight:600">${o.pct===null?'—':o.pct+'%'} <span class="tiny">n=${o.n}</span></span></div>
+              <div class="meter" style="margin-top:4px"><i style="width:${o.pct||0}%"></i></div></div>`).join('')}
+        </div>
+        <p class="tiny" style="margin:10px 0 0">Non-prescription encounters that met all four criteria: reason recorded, red flags screened, referral where a flag was present, duration and safety-net advice given. Complete cases. ${PRIMARY_VERSION}, panel sign-off pending.</p>
+      </div>
+      <div class="card">
+        <div class="eyebrow">By pathway</div>
+        <div class="tablewrap" style="margin-top:7px"><table><thead><tr><th>Pathway</th><th class="num">n</th><th class="num">Concordant</th></tr></thead><tbody>
+          ${['prescription','non-prescription'].map(p=>{const a=tx.filter(t=>t.path===p);
+            const sc=scored(a);
+            return `<tr><td>${p}</td><td class="num">${a.length}</td><td class="num">${sc.length?pct(sc.filter(t=>t.conc===true).length,sc.length)+'%':'—'}</td></tr>`}).join('')}
+        </tbody></table></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Most dispensed molecules</div>
+      <div class="tablewrap" style="margin-top:7px"><table>
+        <thead><tr><th>Molecule</th><th>AWaRe</th><th class="num">Tx</th><th class="num">DDD</th></tr></thead>
+        <tbody>${top.length?top.map(([k,v])=>`<tr><td>${esc(k)}</td><td><span class="badge ${groupKey(v.g)}">${esc(groupLabel(v.g))}</span></td><td class="num">${v.n}</td><td class="num">${v.ddd?v.ddd.toFixed(1):'—'}</td></tr>`).join('')
+          :'<tr><td colspan="4" class="muted">No data yet</td></tr>'}</tbody></table></div>
+      <p class="tiny" style="margin:9px 0 0">DDD shown where the molecule has a mapped value; illustrative only, and not part of the primary outcome.</p>
+    </div>
+  </div>`;
+}
+
+/* ---------- SETUP ---------- */
+function viewSetup(s){
+  s.innerHTML=`<div class="stack">
+    <h1>Setup and governance</h1>
+
+    <div class="card">
+      <div class="eyebrow">Study configuration</div>
+      <div class="stack-s" style="margin-top:9px">
+        <div class="row"><span class="muted" style="flex:1">Pharmacy ID</span><input type="text" id="phin" value="${esc(cfg.pharmacyId)}" style="max-width:140px" aria-label="Pharmacy ID"></div>
+        <div class="row"><span class="muted" style="flex:1">Cluster / step</span><span class="mono">${esc(cfg.cluster)} · step ${cfg.step}</span></div>
+        <div class="row"><span class="muted" style="flex:1">Counter staff on duty</span><input type="text" id="stin" value="${esc(cfg.staffCode)}" style="max-width:110px" aria-label="Staff code"></div>
+        <div class="row"><span class="muted" style="flex:1">Study start</span><input type="date" id="ssin" value="${esc(cfg.studyStart)}" style="max-width:160px" aria-label="Study start date"></div>
+        <div class="eyebrow" style="margin-top:4px">Phase</div>
+        <div class="seg">
+          <button data-ph="silent" aria-pressed="${cfg.phase==='silent'}" ${FIELD?'disabled':''}>Silent</button>
+          <button data-ph="advisory" aria-pressed="${cfg.phase==='advisory'}" ${FIELD?'disabled':''}>Advisory</button>
+        </div>
+        <p class="tiny" style="margin:2px 0 0">${FIELD?'Fixed by the cluster activation date set by the research team. Not changeable at the counter.':'Switchable in this evaluator build so both states can be seen. In the field build the phase is fixed by the activation date.'} ${cfg.activated?'Activation '+esc(cfg.activated):'No activation date set'}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Evaluator walkthrough</div>
+      <p class="muted" style="margin:7px 0 10px">Loads the counter with one of the four simulated-client scenarios from the protocol.</p>
+      <div class="stack-s">
+        ${[['s1','Antibiotic not indicated','Azixon for 2 days of cough, no prescription'],
+           ['s2','Red flag needing referral','Acocip for a child with diarrhoea and blood in stool'],
+           ['s3','Legitimate prescription','Am-Clav 625 with a written prescription'],
+           ['s4','Watch drug, no prescription','Refix requested by name, no prescription'],
+           ['s5','Combination the INN field hides','Apilox — reads as Access on the INN, is Not recommended in full']].map(([id,t,d])=>
+          `<button class="btn wide" data-sc="${id}" style="flex-direction:column;align-items:flex-start;gap:2px;text-align:left">
+            <span style="font-weight:600">${t}</span><span class="tiny">${d}</span></button>`).join('')}
+      </div>
+    </div>
+
+    <details class="acc"><summary>What this tool will not do</summary>
+      <div class="body"><ul style="margin:0;padding-left:18px">
+        <li>Diagnose an infection or prescribe autonomously</li>
+        <li>Ask staff to substitute a clinician's antibiotic because of its AWaRe group</li>
+        <li>Decide clinical appropriateness from AWaRe group alone</li>
+        <li>Send shop-identifiable data to a regulator</li>
+        <li>Record customer names, phone numbers or national IDs</li>
+      </ul>
+      <p style="margin:9px 0 0">Human oversight is mandatory. Every rule and prompt is reviewed by the clinical pharmacologist, microbiologist, pathologist and clinician before field activation.</p></div>
+    </details>
+
+    <details class="acc"><summary>Versions and provenance</summary>
+      <div class="body"><dl class="kv">
+        ${Object.entries({'App':VERSIONS.app,'Drug map':VERSIONS.map,'AWaRe':VERSIONS.aware,'Prompt library':VERSIONS.prompts,'Engine':VERSIONS.engine})
+          .map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}
+      </dl>
+      <p style="margin:9px 0 0">Every transaction stores the map and prompt versions in force at the time, so an analysis can be reproduced against the exact rule set.</p></div>
+    </details>
+
+    <details class="acc"><summary>What this shop stocks <span class="tiny mono">${(cfg.stock||[]).length}</span></summary>
+      <div class="body">
+        <p style="margin:0 0 10px">Mark the brands on your shelf. When a customer asks for something you do not carry, your own brands of the same medicine come up first. Kept on this device — it is never part of the research data.</p>
+        <input type="search" id="stq" placeholder="Search a brand to add" autocomplete="off" aria-label="Search a brand to add to stock">
+        <div id="stres"></div>
+        ${(cfg.stock||[]).length?`<div class="eyebrow" style="margin-top:13px">On the shelf</div>
+          <div class="chips" style="margin-top:6px">${cfg.stock.map(b=>`<button class="chip" data-unstock="${esc(b)}">${esc(b)} &times;</button>`).join('')}</div>`:''}
+      </div>
+    </details>
+
+    <details class="acc"><summary>Where the data lives</summary>
+      <div class="body">
+        <p style="margin:0 0 9px">The brand-to-generic dictionary and the transaction log move in opposite directions.</p>
+        <div class="tablewrap"><table><thead><tr><th>Layer</th><th>Holds</th><th>Direction</th></tr></thead><tbody>
+          <tr><td>Source of truth</td><td>Department of Drug Administration registration list, held in the national drug database</td><td>Regenerated when DDA publishes</td></tr>
+          <tr><td>Published crosswalk</td><td>Brand, generic, ATC, AWaRe group, version stamp</td><td>Down to devices, weekly at most</td></tr>
+          <tr><td>On this device</td><td>The crosswalk, embedded</td><td>Lookup never uses the network</td></tr>
+          <tr><td>Transaction log</td><td>Browser storage on this device only</td><td>Manual export and backup; no automatic upload is implemented</td></tr>
+        </tbody></table></div>
+        <p style="margin:10px 0 0">Lookup is local by design: a counter on an intermittent connection cannot wait on a server, and entry time is a study outcome. A change to any AWaRe assignment is reviewed by a physician before a crosswalk version ships, and every transaction stores the version in force so an analysis can be reproduced against the exact rule set.</p>
+      </div>
+    </details>
+
+    <details class="acc"><summary>Adverse output log <span class="tiny mono">${adverse.length}</span></summary>
+      <div class="body">${adverse.length?`<div class="tablewrap"><table><thead><tr><th>When</th><th>Product</th><th>Prompts</th></tr></thead><tbody>
+        ${adverse.map(a=>`<tr><td class="mono tiny">${a.ts.slice(0,16).replace('T',' ')}</td><td>${esc(a.product)}</td><td class="mono tiny">${esc(a.prompts)}</td></tr>`).join('')}
+      </tbody></table></div>`:'<p style="margin:0">Nothing reported. Staff can flag a wrong or unclear message from the advice screen; flagged outputs are quarantined and reviewed by the clinical governance group.</p>'}</div>
+    </details>
+
+    <details class="acc"><summary>Products added at the counter <span class="tiny mono">${provisional.filter(v=>v.status==='pending').length} pending</span></summary>
+      <div class="body">
+        <p style="margin:0 0 10px">Reviewed weekly by the research team. A misspelling is merged into the existing product; a genuinely new product is accepted and goes into the next crosswalk version.</p>
+        ${provisional.length? provisional.map(v=>{
+          const n=norm(v.brand);
+          const near=BRANDS.filter(b=>b._a && lev(n.replace(/[0-9].*$/,''), b._a, 2)<=2).slice(0,3);
+          return `<div class="card" style="margin-bottom:9px;padding:12px">
+            <div class="row" style="justify-content:space-between;align-items:flex-start">
+              <div style="min-width:0">
+                <div style="font-weight:600">${esc(v.brand)}</div>
+                <div class="tiny">${esc(v.generic||'molecule not recorded')}${v.strength?' · '+esc(v.strength):''} · ${esc(v.form||'')}${v.mfr?' · '+esc(v.mfr):''}</div>
+                <div class="tiny mono">${esc(v.shop)} · ${v.ts.slice(0,10)}${v.typed&&v.typed!==v.brand?' · typed "'+esc(v.typed)+'"':''}</div>
+              </div>
+              <span class="pathtag" style="color:var(--${v.status==='pending'?'accent':(v.status==='rejected'?'danger':'access')})">${v.status}</span>
+            </div>
+            ${v.photo?`<img src="${v.photo}" alt="Strip photo for ${esc(v.brand)}" style="max-height:92px;border-radius:7px;border:1px solid var(--line);margin-top:9px">`:''}
+            ${near.length?`<div class="tiny" style="margin-top:9px">Close to: ${near.map(b=>esc(b.b)).join(', ')}</div>`:''}
+            ${v.status==='pending'?`<div class="row" style="margin-top:9px;gap:6px">
+              ${near.map(b=>`<button class="btn sm" data-merge="${v.id}" data-into="${esc(b.b)}">Same as ${esc(b.b)}</button>`).join('')}
+              <button class="btn sm" data-accept="${v.id}">Genuinely new</button>
+              <button class="btn sm" data-reject="${v.id}" style="color:var(--danger)">Reject</button>
+            </div>`:`<div class="tiny" style="margin-top:7px">${esc(v.resolution)} · ${v.resolvedTs.slice(0,10)}</div>`}
+          </div>`;
+        }).join('') : '<p style="margin:0">Nothing added yet. When a brand is not in the register, staff add it from the strip and it appears here. The rate of additions is a headline feasibility measure.</p>'}
+      </div>
+    </details>
+
+    <div class="card">
+      <div class="eyebrow">Data</div>
+      <div class="stack-s" style="margin-top:9px">
+        <button class="btn wide" id="csv">Show the end-of-study export</button>
+        <button class="btn wide" id="dict">Show data dictionary</button>
+        ${FIELD?'':`<button class="btn wide" id="seed">${cfg.seeded?'Reseed':'Load'} demonstration data</button>`}
+        <button class="btn wide" id="clear" style="color:var(--danger)">Clear all records</button>
+      </div>
+      <p class="tiny" style="margin:10px 0 0">Records are held in this browser's local storage on this device, and nowhere else. There is no account, no server and no automatic upload: nothing is transmitted anywhere. Data reaches the study only through the manual export on this screen. Server synchronisation is a planned feature and is not implemented.</p>
+    </div>
+
+    <div class="note warn">Prototype for TDR application CA26-0034. Brand dictionary built from the Department of Drug Administration registration list — 2,307 antibiotic products across ATC J01, J04, P01AB, A07AA, G01AF, S01AA and D06A. Combination products are resolved from full composition, not from the INN field. Not for clinical use.</div>
+  </div>`;
+
+  s.querySelector('#phin').addEventListener('change',e=>{ cfg.pharmacyId=e.target.value.trim()||'PH-07'; save(); render(); });
+  s.querySelector('#stin').addEventListener('change',e=>{ cfg.staffCode=e.target.value.trim()||'S-01'; save(); });
+  s.querySelector('#ssin').addEventListener('change',e=>{ cfg.studyStart=e.target.value; save(); });
+  s.querySelectorAll('[data-ph]').forEach(b=>b.onclick=()=>{
+    if(FIELD){ toast('Phase is set by the study schedule'); return; }
+    cfg.phase=b.dataset.ph;
+    if(cfg.phase==='advisory'&&!cfg.activated) cfg.activated=dstr();
+    save(); render(); toast(cfg.phase==='advisory'?'Advisory prompts on':'Recording only');
+  });
+  s.querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>loadScenario(b.dataset.sc));
+  const mark=(id,status,res)=>{ const v=provisional.find(x=>x.id===id); if(!v) return;
+    v.status=status; v.resolution=res; v.resolvedTs=new Date().toISOString(); save(); render(); toast(res); };
+  s.querySelectorAll('[data-merge]').forEach(b=>b.onclick=()=>mark(b.dataset.merge,'merged','Merged into '+b.dataset.into));
+  s.querySelectorAll('[data-accept]').forEach(b=>b.onclick=()=>mark(b.dataset.accept,'accepted','Accepted for the next crosswalk version'));
+  s.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>mark(b.dataset.reject,'rejected','Rejected — not an antibiotic product'));
+  const stq=s.querySelector('#stq'), stres=s.querySelector('#stres');
+  if(stq) stq.addEventListener('input',()=>{
+    const q=norm(stq.value);
+    if(q.length<3){ stres.innerHTML=''; return; }
+    const seen=new Set(), hits=[];
+    for(const b of BRANDS){ if((b._n.includes(q)||b._c.includes(q)) && !seen.has(b.b)){ seen.add(b.b); hits.push(b); } if(hits.length>=6) break; }
+    stres.innerHTML = hits.length?`<div class="results" style="margin-top:7px">${hits.map((b,i)=>
+      `<button data-add="${i}"><span style="flex:1;min-width:0"><span class="rname">${esc(b.b)}</span>
+      <span class="rgen"> · ${esc(b.g)}${b.s?' · '+esc(b.s):''}</span></span>
+      <span class="badge ${groupKey(b.a)}">${esc(groupLabel(b.a))}</span></button>`).join('')}</div>`
+      :'<div class="tiny" style="margin-top:7px">No match</div>';
+    stres._h=hits;
+    stres.querySelectorAll('[data-add]').forEach(btn=>btn.onclick=()=>{
+      const b=stres._h[+btn.dataset.add];
+      cfg.stock=cfg.stock||[]; if(!cfg.stock.includes(b.b)) cfg.stock.push(b.b);
+      save(); render(); toast(b.b+' added to your shelf');
+    });
+  });
+  s.querySelectorAll('[data-unstock]').forEach(b=>b.onclick=()=>{
+    cfg.stock=(cfg.stock||[]).filter(x=>x!==b.dataset.unstock); save(); render();
+  });
+  s.querySelector('#csv').onclick=showExport;
+  s.querySelector('#dict').onclick=showDict;
+  const sd=s.querySelector('#seed');
+  if(sd) sd.onclick=()=>{ seed(); toast('Demonstration data loaded'); render(); };
+  s.querySelector('#clear').onclick=()=>{ tx=[];adverse=[];unresolved=[];cfg.seeded=false;save();render();toast('Records cleared'); };
+}
+
+function loadScenario(id){
+  const map={s1:['Azixon','resp'],s2:['Acocip','diarr'],s3:['Am-Clav',''],s4:['Refix',''],s5:['Apilox','skin']};
+  const [brand,ind]=map[id];
+  const hits=lookup(brand);
+  if(!hits.length){ toast('Brand not in demo dictionary'); return; }
+  tab='counter'; startDraft(hits[0]);
+  const d=draft;
+  if(id==='s3'){ d.rx=true; d.rxMatch=true; d.qtyMatch='yes'; d.qty=10; d.ageBand='18–44'; }
+  else { d.rx=false; d.inds=ind?[ind]:[]; d.qty= id==='s1'?6:10; d.ageBand= id==='s2'?'2–11':'18–44'; }
+  if(id==='s2'){ d.redFlags=['rf3']; d.screened=true; }
+  render();
+}
+
+function csvRows(){
+  /* One analysis-ready table. Model terms first, then the outcome and its
+     components, then descriptors. No joins needed to fit the primary model.
+     Empty cell = not applicable, which read_csv() turns into NA. */
+  const cols=[
+    'transaction_id','encounter_id','product_seq','pharmacy_id','cluster','step','staff_code',
+    'date','time','weekday','hour','period_week','period_month','phase','exposure','days_since_activation',
+    'pathway','concordant',
+    'c_identified','c_rx_concordant','c_strength','c_form','c_quantity','c_indication','c_screened','c_referred','c_dose','c_duration','c_safetynet','c_safety',
+    'components_unassessed','outcome_unscorable',
+    'primary_eligible','primary_concordant','primary_unassessed','primary_version',
+    'prescription_present','rx_concordant','strength_vs_rx','form_vs_rx','quantity','quantity_vs_rx','indication','indication_count','indication_other','red_flag_screened','red_flags',
+    'counsel_dose','counsel_duration','safety_net_advice','referral_given','action','age_band','sex',
+    'aware_group','access_group','veterinary','generic','brand_as_entered','strength','form','product_status','provisional_id',
+    'high_risk_flags','prompt_ids','entry_seconds','lookup_ms','map_version','prompt_version'];
+  const y=v=>v===true?'1':v===false?'0':'';
+  const s=v=>v===undefined||v===null?'':String(v);   // yes | no | na | unassessed
+  const DAY=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const start=cfg.studyStart?new Date(cfg.studyStart+'T00:00:00'):null;
+  const act=cfg.activated?new Date(cfg.activated+'T00:00:00'):null;
+  const days=(a,b)=>Math.round((a-b)/864e5);
+  const rows=tx.map(r=>{
+    const c=r.comp||{}, dt=new Date(r.ts);
+    return [r.id,r.enc||r.id,r.seq||1,r.ph,r.cluster,cfg.step,r.staff||'',
+      r.d,r.ts.slice(11,19),DAY[dt.getDay()],dt.getHours(),
+      start?Math.floor(days(dt,start)/7)+1:'', start?(dt.getFullYear()-start.getFullYear())*12+(dt.getMonth()-start.getMonth())+1:'',
+      r.phase, r.phase==='advisory'?1:0, act?days(dt,act):'',
+      c.pathway||r.path, r.conc===true?1:r.conc===false?0:'',
+      s(c.identified),s(c.rxConcordant),s(c.strengthMatched),s(c.formMatched),s(c.quantityAssessed),
+      s(c.indicationCaptured),s(c.redFlagScreened),s(c.referredIfFlag),
+      s(c.doseGiven),s(c.durationGiven),s(c.safetyNetGiven),s(c.safetyHandled),
+      c.nUnass??'', c.anyUnass?1:0,
+      (r.prim&&r.prim.eligible)?1:0,
+      (r.prim&&r.prim.eligible)?(r.prim.met===true?1:r.prim.met===false?0:''):'',
+      (r.prim&&r.prim.eligible)?r.prim.nUnass:'', PRIMARY_VERSION,
+      r.rx?1:0,y(r.rxMatch),r.strengthMatch||'',r.formMatch||'',r.qty,r.qtyMatch||'',(r.inds||[]).join('|'),(r.inds||[]).length,r.indOther||'',r.screened?1:0,r.redFlags.join('|'),
+      r.counselDose?1:0,r.counselDays?1:0,r.safetyNet?1:0,r.referred?1:0,r.action||'',r.ageBand,r.sex,
+      r.aware, r.aware==='Access'?1:0, r.vet?1:0, r.generic,r.brand,r.strength,r.form,
+      r.aware==='Unverified'?'provisional':'registered', r.provisionalId||'',
+      r.flags.join('|'),r.prompts.join('|'),r.secs,r.lookupMs,VERSIONS.map,VERSIONS.prompts];
+  });
+  return [cols,...rows];
+}
+function provRows(){
+  return [['provisional_id','brand_as_entered','typed_query','generic_from_pack','strength','form','manufacturer',
+           'pharmacy_id','added_at','photo','review_status','resolution','resolved_at'],
+    ...provisional.map(v=>[v.id,v.brand,v.typed||'',v.generic,v.strength,v.form,v.mfr,v.shop,v.ts,
+      v.photo?'attached':'none',v.status,v.resolution||'',v.resolvedTs||''])];
+}
+function dayRows(){
+  const by={};
+  tx.forEach(r=>{ const k=r.ph+'|'+r.d+'|'+r.phase; by[k]=by[k]||{n:0,acc:0,norx:0,conc:0,unres:0,secs:[]};
+    const b=by[k]; b.n++; if(r.aware==='Access')b.acc++; if(r.rx===false)b.norx++; if(r.conc===true)b.conc++; if(r.conc===null||r.conc===undefined)b.unscored=(b.unscored||0)+1;
+    if(r.unresolved)b.unres++; if(r.secs)b.secs.push(r.secs); });
+  const med=a=>a.length?a.slice().sort((x,y)=>x-y)[Math.floor(a.length/2)]:'';
+  return [['pharmacy_id','date','phase','transactions','access','no_prescription','concordant','unresolved','median_entry_seconds'],
+    ...Object.entries(by).map(([k,b])=>{const [ph,d,phase]=k.split('|');
+      return [ph,d,phase,b.n,b.acc,b.norx,b.conc,b.unres,med(b.secs)];})];
+}
+function promptRows(){
+  return [['prompt_id','library_version','title','line_1','line_2'],
+    ...Object.entries(PROMPTS).map(([id,v])=>[id,VERSIONS.prompts,v.t,v.b[0]||'',v.b[1]||''])];
+}
+function advRows(){
+  return [['flagged_at','pharmacy_id','product','prompt_ids','note'],
+    ...adverse.map(a=>[a.ts,cfg.pharmacyId,a.product,a.prompts,a.note])];
+}
+function searchRows(){
+  return [['searched_at','pharmacy_id','staff_code','phase','query','hits','lookup_ms','outcome'],
+    ...searches.filter(x=>x.o!=='typing').map(x=>[x.ts,x.ph,x.staff,x.phase,x.q,x.n,x.ms,x.o])];
+}
+function download(name, text, mime){
+  try{
+    const b=new Blob([text],{type:mime+';charset=utf-8'});
+    const u=URL.createObjectURL(b), a=document.createElement('a');
+    a.href=u; a.download=name; document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(u); a.remove();},400);
+    toast('Saved '+name);
+  }catch(e){ toast('Download blocked \u2014 use Copy instead'); }
+}
+function toCsv(rows){ return rows.map(r=>r.map(c=>/[",\n]/.test(String(c))?'"'+String(c).replace(/"/g,'""')+'"':c).join(',')).join('\n'); }
+
+function showExport(){
+  const sheets=[
+    ['transactions', csvRows(), 'analysis',
+     'The analysis dataset. One row per antibiotic sale, every model term present as a column — cluster, step, calendar period, exposure, staff, outcome and each concordance component. Fits the primary model with no joins and no reshaping. An empty cell means not applicable and reads as NA.'],
+    ['products_added', provRows(), 'reference',
+     'One row per product added at a counter, with its review decision. Different unit of observation, so it stays separate — flattening it into the sales table would duplicate rows.'],
+    ['prompt_library', promptRows(), 'reference',
+     'The exact wording shown, by version. Thirteen rows; repeating this text on every sale would add nothing.'],
+    ['adverse_outputs', advRows(), 'audit',
+     'Messages staff flagged as wrong or unclear, for the clinical governance group.'],
+    ['product_searches', searchRows(), 'analysis',
+     'One row per completed lookup, resolved or not. Lookup success and the unresolved-product rate are computed from here \u2014 a search that fails and is abandoned leaves no transaction behind, so the sales table cannot measure them.'],
+    ['daily_summary', dayRows(), 'convenience',
+     'Pharmacy by day. Derivable from the analysis table in one line of dplyr — included for the data-quality dashboard, not needed for the model.']
+  ];
+  const RCODE = `library(readr); library(lme4)
+d <- read_csv("transactions.csv")
+
+m <- glmer(concordant ~ exposure + factor(period_month) +
+             (1 | cluster/pharmacy_id),
+           data = d, family = binomial)
+
+# component-level, same shape — c_duration is where the headroom is
+glmer(c_duration ~ exposure + factor(period_month) +
+        (1 | cluster/pharmacy_id), data = d, family = binomial)`;
+  const st=stage();
+  st.innerHTML=`<div class="stack">
+    <div><h1>End-of-study export</h1>
+      <p class="muted" style="margin:4px 0 0">One analysis table. The other four are reference and audit — separate because they count different things, not because the analyst has work left to do.</p></div>
+    ${sheets.map(([n,r,kind,d],i)=>`<div class="card"${kind==='analysis'?' style="border-color:var(--accent);border-width:1.5px"':''}>
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <div style="min-width:0"><div class="row" style="gap:7px"><h3>${n}.csv</h3><span class="pathtag"${kind==='analysis'?' style="background:var(--accent-soft);color:var(--accent)"':''}>${kind}</span></div>
+          <p class="muted" style="margin:5px 0 0">${d}</p></div>
+        <span class="tiny mono" style="white-space:nowrap;text-align:right">${r.length-1} rows<br>${r[0].length} fields</span>
+      </div>
+      <div class="row" style="margin-top:10px;gap:8px"><button class="btn sm" data-dl="${i}">Download CSV</button><button class="btn sm" data-copy="${i}">Copy</button></div>
+    </div>`).join('')}
+    <div class="card">
+      <div class="eyebrow">Fits as delivered</div>
+      <div class="tablewrap" style="margin-top:8px"><pre class="mono" style="margin:0;font-size:12.5px;line-height:1.55;white-space:pre">${esc(RCODE)}</pre></div>
+    </div>
+    <div class="row" style="gap:8px"><button class="btn primary wide" id="dlall">Download all five as one backup file</button></div>
+    <div class="note">Backup procedure: download the bundle at the end of each working day and hand it to the research team on a USB stick or by the agreed channel. The file is named with the pharmacy code and the date. Records live in this browser only \u2014 clearing browser data erases them, and there is no automatic upload.</div>
+    <button class="btn wide" id="bk">Back</button>
+  </div>`;
+  st.querySelector('#bk').onclick=render;
+  st.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
+    const [n,rows]=sheets[+b.dataset.copy];
+    try{ await navigator.clipboard.writeText(toCsv(rows)); toast(n+' copied'); }
+    catch(e){ toast('Clipboard unavailable'); }
+  });
+  st.querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{
+    const [n,rows]=sheets[+b.dataset.dl];
+    download(`${cfg.pharmacyId}_${n}_${dstr()}.csv`, toCsv(rows), 'text/csv');
+  });
+  st.querySelector('#dlall').onclick=()=>{
+    // one plain-text bundle: no archive library, nothing to install, opens anywhere
+    const parts = sheets.map(([n,rows])=>`### ${n}.csv\n${toCsv(rows)}`);
+    const head = `# DC-SST backup\n# pharmacy: ${cfg.pharmacyId}\n# cluster: ${cfg.cluster}\n`
+               + `# exported: ${new Date().toISOString()}\n# build: ${BUILD} ${VERSIONS.app}\n`
+               + `# sheets: ${sheets.map(s=>s[0]).join(', ')}\n`;
+    download(`${cfg.pharmacyId}_dcsst_backup_${dstr()}.txt`, head+'\n'+parts.join('\n\n'), 'text/plain');
+    cfg.lastBackup = new Date().toISOString(); save();
+  };
+}
+function showDict(){
+  const d=[['id','Transaction code, generated on device'],['pharmacy_id','Study code. Never the shop name'],
+    ['phase','silent or advisory, from the cluster activation date'],['map_version','Drug map in force at the time'],
+    ['atc_aware_group','Access / Watch / Reserve / Not recommended'],['prescription_present','Decides which pathway applies'],
+    ['pathway','prescription or non-prescription'],['red_flags','Pipe-separated screen item codes'],
+    ['high_risk_flags','Engine rule codes fired'],['prompt_ids','Prompt library items shown'],
+    ['stewardship_concordant','Primary outcome, pathway-specific'],['age_band','Band only, never a date of birth'],
+    ['entry_seconds','Counter time, for workload analysis']];
+  const s=stage();
+  s.innerHTML=`<div class="stack"><h1>Data dictionary</h1>
+    <div class="card"><div class="tablewrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+      <tbody>${d.map(([a,b])=>`<tr><td class="mono" style="font-size:12.5px">${a}</td><td>${b}</td></tr>`).join('')}</tbody></table></div></div>
+    <p class="tiny">Full codebook is version-controlled alongside the analysis plan. Structure is designed so a future export can be mapped to HL7 FHIR; no FHIR integration is claimed.</p>
+    <button class="btn wide" id="bk">Back</button></div>`;
+  s.querySelector('#bk').onclick=render;
+}
+
+/* ---- demonstration data: plausible counter traffic, clearly marked ---- */
+function seed(){
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  const common=BRANDS.filter(b=>/tablet|capsule|syrup/i.test(b.f||''));
+  tx=[]; const now=Date.now();
+  for(let i=0;i<190;i++){
+    const daysAgo=Math.floor(i/6);
+    const phase = daysAgo>14 ? 'silent' : 'advisory';
+    const b=pick(common), a=awareOf(b.g), g=b.a||(a?a.g:'Unknown');
+    const rx=Math.random()<(phase==='advisory'?0.34:0.28);
+    const age=pick(AGEBANDS), sex=pick(SEXES);
+    const flagged=!rx&&Math.random()<0.1;
+    const adv=phase==='advisory';
+    const d={brand:b.b,generic:b.g,strength:b.s||'',form:b.f||'tablet',awareGroup:g,rx,
+      rxMatch: rx? Math.random()<0.88 : null, qtyMatch: rx? (Math.random()<0.75?'yes':'na') : null,
+      qty: Math.random()<(adv?0.78:0.58)?10:5,
+      inds: rx?[]:(Math.random()<0.28?[pick(INDICATIONS).id,pick(INDICATIONS).id].filter((v,i,a)=>a.indexOf(v)===i):[pick(INDICATIONS).id]), indOther:'',
+      screened: rx?false:(adv?Math.random()<0.82:Math.random()<0.26),
+      redFlags: flagged?[pick(REDFLAGS).id]:[], pregnant:false, ageBand:age, sex,
+      counselDose: Math.random()<(adv?0.95:0.93),          // the grid is already routine
+      counselDays: Math.random()<(adv?0.62:0.24),          // saying the number of days is the real headroom
+      safetyNet:   Math.random()<(adv?0.88:0.80),
+      referred: flagged?(adv?Math.random()<0.8:Math.random()<0.15):false, action:'dispensed'};
+    const p=buildPrompt(d); d.hasStop=p.sev==='stop';
+    if(d.hasStop&&adv&&Math.random()<0.55) d.action=Math.random()<0.5?'referred':'changed';
+    const c=concordance(d);
+    const ts=new Date(now-daysAgo*864e5-Math.random()*36e5).toISOString();
+    tx.push({id:'T'+(now-i*97531).toString(36).toUpperCase(),enc:'E'+(now-Math.floor(i/ (Math.random()<0.12?2:1))*97531).toString(36).toUpperCase(),seq:1,d:ts.slice(0,10),ts,ph:cfg.pharmacyId,cluster:cfg.cluster,staff:pick(['S-01','S-02','S-03']),phase,
+      brand:d.brand,generic:d.generic,strength:d.strength,strengthMg:parseInt(d.strength)||0,form:d.form,aware:g,
+      rx:d.rx,rxMatch:d.rxMatch,qtyMatch:d.qtyMatch,qty:d.qty,inds:d.inds,indOther:'',screened:d.screened,
+      redFlags:d.redFlags,askedSymptoms:d.screened,counselDose:d.counselDose,counselDays:d.counselDays,
+      safetyNet:d.safetyNet,referred:d.referred,action:d.action,ageBand:age,sex,
+      flags:p.flags.map(f=>f.id),prompts:adv?p.ids:[],secs:Math.round((adv?26+Math.random()*22:17+Math.random()*14)*10)/10,
+      lookupMs:Math.round((3+Math.random()*9)*10)/10,unresolved:Math.random()<0.045,path:c.pathway,conc:c.met,comp:c,prim:primaryOutcome(d)});
+  }
+  searches=[];
+  tx.forEach(t=>{
+    const q=(t.brand||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,7);
+    if(q.length>=3) searches.push({ts:t.ts,ph:t.ph,staff:t.staff,phase:t.phase,q,
+      n:t.unresolved?0:(1+Math.floor(Math.random()*4)), ms:t.lookupMs, o:t.unresolved?'added-new':(Math.random()<0.06?'resolved-fuzzy':'resolved')});
+  });
+  tx.sort((a,b)=>b.ts.localeCompare(a.ts));
+  unresolved=tx.filter(t=>t.unresolved).slice(0,4).map(t=>({brand:t.brand,ts:t.ts}));
+  cfg.seeded=true; save();
+}
+
+/* ---- boot ---- */
+document.getElementById('tabs').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-tab]'); if(!b) return;
+  tab=b.dataset.tab; if(tab!=='counter') draft=null; render();
+});
+/* Phase assignment belongs to the trial, not to the counter. In the field build the
+   phase is computed from the cluster's activation date and the control is inert. */
+function phaseFromSchedule(){
+  if(!cfg.activated) return 'silent';
+  return dstr() >= cfg.activated ? 'advisory' : 'silent';
+}
+if(FIELD){ cfg.phase = phaseFromSchedule(); }
+document.getElementById('phaseBtn').onclick=()=>{
+  if(FIELD){ toast('Phase is set by the study schedule'); return; }
+  cfg.phase = cfg.phase==='silent'?'advisory':'silent';
+  if(cfg.phase==='advisory'&&!cfg.activated) cfg.activated=dstr();
+  save(); render(); toast(cfg.phase==='advisory'?'Advisory prompts on':'Recording only');
+};
+if(!load()){ /* first run */ }
+if(!FIELD && !tx.length){ seed(); }   // never in the field build
+if(!cfg.studyStart && tx.length){                      // demo: anchor the clock to the seeded traffic
+  cfg.studyStart = tx[tx.length-1].d;
+  const adv=tx.filter(t=>t.phase==='advisory'); if(adv.length) cfg.activated=adv[adv.length-1].d;
+  save();
+}
+render();
+</script>

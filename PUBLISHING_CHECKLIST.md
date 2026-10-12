@@ -1,51 +1,41 @@
-# Before this repo goes public
+# Open items before submission
 
-Delete this file once the list is done.
+Updated 12 October 2026, after external technical review.
 
-## Gates — either of these can stop publication outright
+## Resolved in code
 
-- [ ] **Is TDR review for CA26-0034 anonymised or blinded?** A public repo carrying
-      institution names, author names and commit-author emails de-anonymises the application.
-      If review is blinded, **do not publish** — submit the technology brief with screenshots
-      instead.
-- [ ] **Does the eTDR submission portal have a field for a URL?** TDR submissions run through
-      structured portals with fixed fields and named attachments. If there is no field for it,
-      the link must live inside the technology brief; it is not a separate deliverable.
+- [x] Field build with no seeded demonstration data (`field.html`)
+- [x] Phase fixed by cluster activation date in the field build; inert at the counter
+- [x] Baseline no longer assumes a sale — silent phase asks dispensed / referred /
+      not dispensed, so a baseline referral is recorded as a referral
+- [x] Counselling labels carry no instruction during baseline; tick boxes retained
+- [x] Unassessed components never count as concordant; outcome left unscorable instead
+- [x] `components_unassessed` and `outcome_unscorable` exported per row
+- [x] Real CSV download and a one-file daily backup bundle
+- [x] Interface text no longer describes a study server that does not exist
+- [x] `LICENSE` and `CITATION.cff` placeholders removed
+- [x] `STANDARDS.md` — classifications used, and why a self-contained instrument is correct
+      for a counter where no prescription arrives
+- [x] 60 regression assertions, each pinning a reviewed defect
 
-## Ownership and attribution
+## Still needed from people, not from code
 
-- [ ] `LICENSE` has a placeholder copyright line. Fill in the agreed holder.
-- [ ] **Get YWN's agreement in writing** before describing the tool as a YWN product or
-      placing the repo under YWN's organisation. This is an IP statement about another
-      institution and should not first appear in a document submitted to WHO.
-- [ ] `CITATION.cff` has placeholder authors and ORCIDs. Fill in, or delete the file.
-- [ ] Confirm the provenance narrative in the proposal matches what actually happened. If the
-      AMR-at-the-counter concept originated on the Sncho side rather than with YWN, say so —
-      an existing lookup tool offered to a research team that needed a counter-level
-      instrument is just as strong a story and nobody can contradict it.
+- [ ] **Written ownership and attribution agreement** between YWN and Sncho. `LICENSE` names
+      both jointly and says so provisionally. This must be signed, not assumed.
+- [ ] **Panel sign-off** on `DC-SST_panel_decision_log.xlsx` — 415 products and 53
+      molecule-level calls. Sheet 4 first.
+- [ ] **Freeze the outcome algorithm** and test it against independently adjudicated
+      examples before recruitment, as the review asks. The scoring is now deterministic and
+      covered by tests; what is missing is a set of encounters scored by hand by two
+      reviewers and compared against the tool.
+- [ ] **Decide the encounter definition in the protocol** and make the text match the data
+      model: every eligible antibiotic-related encounter is recorded, with dispensing status
+      stored separately. The software now supports this; the protocol wording must agree.
+- [ ] **Confirm whether TDR review is anonymised.** If it is, do not link the public
+      repository; submit the technology brief with screenshots instead.
 
-## Data rights
+## Upload note
 
-- [ ] **Confirm redistribution rights for the DDA-derived register** before publishing
-      `data/brands.json` and `data/nonab.json`. The DDA source is public, the enrichment and
-      the brand–generic crosswalk are your work. If rights are unclear, ship a sample subset
-      and state that the full crosswalk is available to the study team and will be deposited
-      at study end.
-
-## Hygiene
-
-- [ ] Squash history into a single initial commit, or check the existing history for author
-      emails, test data and anything else you would not publish.
-- [ ] Repo description and topics set; no Sncho branding in either.
-- [ ] Enable GitHub Pages (Settings → Pages → `main`, folder `/`), then put the resulting URL
-      into the README's "Live demo" line and into the technology brief.
-- [ ] Open the Pages URL on a phone. The tool is built for a counter tablet and reviewers read
-      on phones.
-
-## Known content notes
-
-- The tool auto-loads 190 simulated sales on first visit so the analysis screens are not
-  empty. This is labelled on the Surveillance and Dispensing-log screens and in the header
-  bar. **Do not describe any of those numbers as findings** anywhere in the application.
-- Fonts load from Google Fonts, so the demo needs a network connection. True offline operation
-  would need the fonts embedded.
+The GitHub upload on 9 October missed `src/` and `data/` — only top-level files went up.
+When re-uploading, drag the **folders** themselves, not their contents, and confirm the file
+list shows paths like `src/build.py` before committing.
